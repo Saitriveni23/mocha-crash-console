@@ -1,249 +1,449 @@
+import React, { useState, useEffect } from 'react';
 import {
-  Activity,
-  Bell,
-  CheckCircle2,
-  ClipboardList,
-  FileText,
-  Heart,
-  Home,
-  Info,
-  Menu,
-  MessageSquareText,
-  Settings as SettingsIcon,
-  Target,
-  X,
-  XCircle,
-  Zap,
+  ComposedChart, Bar, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell, AreaChart
+} from 'recharts';
+import { 
+  Coffee, LayoutDashboard, AlertCircle, FileText, Activity, Settings, Cpu, Search, Bell, Sun, User, 
+  ChevronDown, ArrowUpRight, ArrowDownRight, CheckCircle2, ShieldAlert
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { Avatar, LiveDot } from './components/ui';
-import { TEAM_MEMBERS } from './mockData';
-import Alerts from './pages/Alerts';
-import Communications from './pages/Communications';
-import IncidentLog from './pages/IncidentLog';
-import LiveFeeds from './pages/LiveFeeds';
-import MarketMonitor from './pages/MarketMonitor';
-import Overview from './pages/Overview';
-import Settings from './pages/Settings';
-import Templates from './pages/Templates';
-import { DashboardProvider, useDashboard } from './store';
-import type { NavigationTab } from './types';
+import './App.css';
 
-const NAV: { id: NavigationTab; icon: ReactNode }[] = [
-  { id: 'Overview', icon: <Home className="w-[18px] h-[18px]" /> },
-  { id: 'Market Monitor', icon: <Target className="w-[18px] h-[18px]" /> },
-  { id: 'Live Feeds', icon: <Activity className="w-[18px] h-[18px]" /> },
-  { id: 'Alerts', icon: <Bell className="w-[18px] h-[18px]" /> },
-  { id: 'Communications', icon: <MessageSquareText className="w-[18px] h-[18px]" /> },
-  { id: 'Incident Log', icon: <ClipboardList className="w-[18px] h-[18px]" /> },
-  { id: 'Templates', icon: <FileText className="w-[18px] h-[18px]" /> },
-  { id: 'Settings', icon: <SettingsIcon className="w-[18px] h-[18px]" /> },
-];
+// --- Types ---
+type DataPoint = { time: string; open: number; close: number; high: number; low: number; volume: number; range: [number, number] };
+type OrderBookEntry = { price: number; size: number };
+type Trade = { id: string; time: string; price: number; size: number; side: 'Buy' | 'Sell' };
 
-const PAGES: Record<NavigationTab, () => ReactNode> = {
-  Overview: () => <Overview />,
-  'Market Monitor': () => <MarketMonitor />,
-  'Live Feeds': () => <LiveFeeds />,
-  Alerts: () => <Alerts />,
-  Communications: () => <Communications />,
-  'Incident Log': () => <IncidentLog />,
-  Templates: () => <Templates />,
-  Settings: () => <Settings />,
+// --- Helpers ---
+const formatPrice = (p: number) => p.toFixed(2);
+
+// --- Custom Candlestick Shape ---
+const Candlestick = (props: any) => {
+  const { x, y, width, height, payload } = props;
+  const isGrowing = payload.close >= payload.open;
+  const color = isGrowing ? '#4ADE80' : '#F87171';
+  
+  const openCloseRange = Math.abs(payload.open - payload.close) || 1;
+  const pixelsPerDollar = height / openCloseRange;
+  
+  const highY = y - (payload.high - Math.max(payload.open, payload.close)) * pixelsPerDollar;
+  const lowY = y + height + (Math.min(payload.open, payload.close) - payload.low) * pixelsPerDollar;
+  
+  return (
+    <g>
+      <line x1={x + width/2} y1={highY} x2={x + width/2} y2={lowY} stroke={color} strokeWidth={1} />
+      <rect x={x} y={y} width={width} height={Math.max(height, 1)} fill={color} stroke={color} />
+    </g>
+  );
 };
 
-function Logo() {
+export default function App() {
+  // --- State ---
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [data, setData] = useState<DataPoint[]>([]);
+  const [currentPrice, setCurrentPrice] = useState(3100);
+  const [prevPrice, setPrevPrice] = useState(3100);
+  
+  const [bids, setBids] = useState<OrderBookEntry[]>([]);
+  const [asks, setAsks] = useState<OrderBookEntry[]>([]);
+  const [tape, setTape] = useState<Trade[]>([]);
+  const [pnlData, setPnlData] = useState<any[]>([]);
+
+  // --- Init Data ---
+  useEffect(() => {
+    const initData: DataPoint[] = [];
+    let lastClose = 3100;
+    for (let i = 0; i < 60; i++) {
+      const time = new Date(Date.now() - (60 - i) * 1000).toLocaleTimeString([], { hour12: false });
+      const open = lastClose;
+      const close = open + (Math.random() - 0.5) * 10;
+      const high = Math.max(open, close) + Math.random() * 5;
+      const low = Math.min(open, close) - Math.random() * 5;
+      initData.push({ time: time.substring(0, 8), open, close, high, low, volume: Math.random() * 500 + 100, range: [open, close] });
+      lastClose = close;
+    }
+    setData(initData);
+    setCurrentPrice(lastClose);
+
+    const initPnl = Array.from({length: 20}).map((_, i) => ({ time: i, val: 10000 + i*150 + (Math.random()-0.5)*500 }));
+    setPnlData(initPnl);
+  }, []);
+  
+  // --- Simulation Engine ---
+  useEffect(() => {
+    if (data.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
+      
+      setCurrentPrice(prev => {
+        setPrevPrice(prev);
+        const change = (Math.random() - 0.45) * 8; // slight upward bias
+        const newPrice = Math.max(0, prev + change);
+        
+        setData(d => {
+          const last = d[d.length - 1];
+          // update last candle or create new if time passes (mocking new candle every 5 ticks for visual effect)
+          // Actually, just append new candle and shift for fast HFT feel
+          const open = prev;
+          const close = newPrice;
+          const high = Math.max(open, close) + Math.random() * 3;
+          const low = Math.min(open, close) - Math.random() * 3;
+          return [...d.slice(1), { time: timeStr.substring(0, 8), open, close, high, low, volume: Math.random() * 800 + 200, range: [open, close] }];
+        });
+
+        // Update Orderbook
+        const newBids = Array.from({ length: 10 }).map((_, i) => ({
+          price: newPrice - (i + 1) * 0.25,
+          size: Math.floor(Math.random() * 50) + 20
+        }));
+        const newAsks = Array.from({ length: 10 }).map((_, i) => ({
+          price: newPrice + (i + 1) * 0.25,
+          size: Math.floor(Math.random() * 50) + 20
+        }));
+        setBids(newBids);
+        setAsks(newAsks);
+
+        // Update Tape
+        const side = Math.random() > 0.5 ? 'Sell' : 'Buy';
+        setTape(t => [{ id: Math.random().toString(), time: timeStr, price: newPrice, size: Math.floor(Math.random() * 15) + 1, side }, ...t.slice(0, 14)]);
+
+        return newPrice;
+      });
+      
+    }, 1000); // Slower tick for luxury calm feel
+
+    return () => clearInterval(interval);
+  }, [data.length]);
+
+  const changePercent = data.length > 0 ? ((currentPrice - data[0].open) / data[0].open) * 100 : 0;
+  const isUp = currentPrice >= prevPrice;
+
   return (
-    <svg viewBox="0 0 40 28" className="w-9 h-7" aria-hidden>
-      <defs>
-        <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ff4f9a" />
-          <stop offset="100%" stopColor="#8b5cf6" />
-        </linearGradient>
-      </defs>
-      <path d="M2 26 L10 3 Q12 -1 14 3 L20 16 L26 3 Q28 -1 30 3 L38 26 L31 26 L27.5 14 L22.5 25 Q20 29 17.5 25 L12.5 14 L9 26 Z" fill="url(#logo-grad)" />
-    </svg>
-  );
-}
+    <div className="h-screen w-screen bg-[#0B0908] text-[#F5E7D8] flex overflow-hidden relative font-sans">
+      
+      {/* Workspace Background Decoration */}
+      <div 
+        className="absolute top-0 right-0 w-[45%] h-full pointer-events-none opacity-[0.15] z-0" 
+        style={{ 
+          backgroundImage: "url('/bg-workspace.jpg')", 
+          backgroundSize: 'cover', 
+          backgroundPosition: 'left center', 
+          maskImage: 'linear-gradient(to right, transparent, black 80%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 80%)'
+        }}
+      ></div>
 
-function Background() {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute -top-40 left-1/4 w-[700px] h-[500px] rounded-full bg-purple-700/20 blur-[140px]" />
-      <div className="absolute top-1/3 -right-40 w-[600px] h-[600px] rounded-full bg-pink-600/10 blur-[140px]" />
-      <div className="absolute -bottom-32 left-0 w-[500px] h-[400px] rounded-full bg-indigo-600/20 blur-[120px]" />
-      <div className="absolute bottom-0 left-0 right-0 h-[45vh] cyber-grid-wavy" />
-      <div className="absolute -bottom-10 left-0 right-0 h-[40vh] cyber-grid-perspective" />
-    </div>
-  );
-}
+      {/* LEFT SIDEBAR */}
+      <div className="w-[72px] bg-[#151210]/95 backdrop-blur-xl border-r border-[#E8A14A]/10 flex flex-col items-center py-6 z-10 shrink-0 shadow-2xl">
+        <div className="w-12 h-12 bg-gradient-to-br from-[#E8A14A]/30 to-transparent rounded-2xl flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(232,161,74,0.2)] border border-[#E8A14A]/20">
+          <Coffee className="text-[#E8A14A] w-6 h-6" />
+        </div>
+        
+        <div className="flex-1 flex flex-col gap-6">
+          {[
+            { id: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+            { id: 'Incidents', icon: <AlertCircle className="w-5 h-5" /> },
+            { id: 'Reports', icon: <FileText className="w-5 h-5" /> },
+            { id: 'Live Markets', icon: <Activity className="w-5 h-5" /> },
+            { id: 'AI Models', icon: <Cpu className="w-5 h-5" /> },
+            { id: 'Settings', icon: <Settings className="w-5 h-5" /> },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 hover-lift ${
+                activeTab === tab.id 
+                  ? 'bg-[#E8A14A]/10 text-[#E8A14A] shadow-inner' 
+                  : 'text-[#F5E7D8]/40 hover:text-[#E8A14A] hover:bg-[#1C1715]'
+              }`}
+            >
+              {activeTab === tab.id && <div className="absolute left-0 w-1 h-6 bg-[#E8A14A] rounded-r-full"></div>}
+              {tab.icon}
+            </button>
+          ))}
+        </div>
 
-function Header({ onMenu }: { onMenu: () => void }) {
-  const { now } = useDashboard();
-  const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-  return (
-    <header className="h-16 shrink-0 flex items-center gap-4 px-4 lg:px-5 border-b border-white/5 bg-[#0b0e1b]/70 backdrop-blur-xl relative z-20">
-      <button className="lg:hidden p-2 -ml-2 text-slate-300" onClick={onMenu} aria-label="Open menu">
-        <Menu className="w-5 h-5" />
-      </button>
-      <div className="flex items-center gap-2 lg:w-[196px] shrink-0">
-        <Logo />
-        <span className="text-lg font-extrabold text-white tracking-tight hidden sm:inline">MochaTrade</span>
-      </div>
-      <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-linear-to-r from-rose-600 to-pink-500 text-white text-xs font-bold tracking-wide glow-pink shrink-0">
-        <Zap className="w-3.5 h-3.5 fill-white" /> FLASH CRASH
-      </span>
-      <span className="text-sm text-slate-300 font-medium hidden md:inline">Incident Response Dashboard</span>
-
-      <div className="ml-auto flex items-center gap-4 lg:gap-6 text-sm">
-        <span className="flex items-center gap-2 text-slate-200 font-semibold">
-          <LiveDot /> LIVE
-        </span>
-        <span className="text-slate-200 font-semibold hidden sm:inline">{time}</span>
-        <span className="text-slate-400 font-medium hidden md:inline">{date}</span>
-        <div className="hidden sm:flex items-center gap-2.5">
-          <div className="flex -space-x-2.5">
-            {TEAM_MEMBERS.map(m => (
-              <Avatar key={m.id} member={m} size={30} ring="border-[#0b0e1b]" />
-            ))}
-          </div>
-          <div className="leading-tight">
-            <div className="text-xs font-bold text-white">Ops Team</div>
-            <div className="text-[11px] text-slate-400">{TEAM_MEMBERS.length} online</div>
-          </div>
+        <div className="mt-auto flex flex-col gap-4 items-center">
+           <div className="relative">
+             <Cpu className="w-5 h-5 text-[#E8A14A] animate-pulse-glow" />
+             <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full shadow-[0_0_5px_#4ADE80]"></div>
+           </div>
+           <div className="w-10 h-10 rounded-full bg-[#1C1715] border border-[#E8A14A]/20 flex items-center justify-center hover-lift cursor-pointer overflow-hidden">
+              <User className="w-5 h-5 text-[#F5E7D8]/60" />
+           </div>
         </div>
       </div>
-    </header>
-  );
-}
 
-function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { tab, setTab, activeAlerts, userAlerts } = useDashboard();
-  const badges: Partial<Record<NavigationTab, number>> = { Alerts: activeAlerts, 'Market Monitor': userAlerts.length };
+      <div className="flex-1 flex flex-col min-w-0 z-10 relative">
+        {/* TOP NAV */}
+        <div className="h-16 border-b border-[#E8A14A]/10 flex items-center justify-between px-8 bg-[#151210]/60 backdrop-blur-md">
+          <div className="flex items-center gap-8">
+            <div className="text-xl font-bold tracking-wider text-[#F5E7D8] flex items-center gap-2">
+              Mocha<span className="text-[#E8A14A]">Trade</span>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-[#1C1715] px-4 py-2 rounded-full border border-[#F5E7D8]/5 focus-within:border-[#E8A14A]/30 transition-colors">
+              <Search className="w-4 h-4 text-[#F5E7D8]/40" />
+              <input type="text" placeholder="Search markets..." className="bg-transparent border-none outline-none text-sm w-48 text-[#F5E7D8] placeholder-[#F5E7D8]/30" />
+            </div>
 
-  return (
-    <>
-      {open && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={onClose} />}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[228px] shrink-0 flex flex-col bg-[#0b0e1b]/95 lg:bg-transparent border-r border-white/5 transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
-      >
-        <div className="lg:hidden flex justify-end p-3">
-          <button onClick={onClose} className="p-1.5 text-slate-400" aria-label="Close menu">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <nav className="px-3 pt-4 space-y-1">
-          {NAV.map(n => {
-            const active = tab === n.id;
-            return (
-              <button
-                key={n.id}
-                onClick={() => {
-                  setTab(n.id);
-                  onClose();
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  active
-                    ? 'bg-linear-to-r from-purple-600/60 to-indigo-600/30 text-white border border-purple-400/40 glow-purple'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                {n.icon}
-                {n.id}
-                {!!badges[n.id] && (
-                  <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center glow-pink">
-                    {badges[n.id]}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto relative h-64 overflow-hidden">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 228 256" preserveAspectRatio="none" aria-hidden>
-            <defs>
-              <linearGradient id="wave-a" x1="0" x2="1">
-                <stop offset="0%" stopColor="#ff2a5f" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1" />
-              </linearGradient>
-              <linearGradient id="wave-b" x1="0" x2="1">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#ec4899" stopOpacity="0.1" />
-              </linearGradient>
-            </defs>
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <path
-                key={i}
-                d={`M0 ${40 + i * 6} C 60 ${-10 + i * 10}, 120 ${90 + i * 4}, 228 ${20 + i * 8}`}
-                fill="none"
-                stroke={i % 2 ? 'url(#wave-b)' : 'url(#wave-a)'}
-                strokeWidth={1.2}
-              />
-            ))}
-          </svg>
-          <div className="absolute bottom-5 left-5 right-5">
-            <p className="text-white font-bold text-[17px] leading-snug">
-              Stay calm.
-              <br />
-              Take action.
-              <br />
-              Use all views.
-            </p>
-            <div className="flex items-center gap-2 mt-4 text-xs text-slate-400 font-semibold">
-              <Heart className="w-4 h-4 text-pink-500 fill-pink-500/30" /> MochaTrade Ops
+            <div className="flex items-center gap-2 text-sm text-[#F5E7D8]/60 hover:text-[#F5E7D8] cursor-pointer">
+              <span>NSE Equities</span>
+              <ChevronDown className="w-4 h-4" />
             </div>
           </div>
-        </div>
-      </aside>
-    </>
-  );
-}
 
-function Toasts() {
-  const { toasts } = useDashboard();
-  const icons = {
-    success: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
-    info: <Info className="w-4 h-4 text-blue-400" />,
-    danger: <XCircle className="w-4 h-4 text-rose-400" />,
-  };
-  return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
-      {toasts.map(t => (
-        <div key={t.id} className="cyber-card rounded-xl px-4 py-3 flex items-center gap-2.5 text-sm font-semibold text-white animate-fade-up">
-          {icons[t.tone]} {t.title}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Shell() {
-  const { tab } = useDashboard();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <div className="h-screen flex flex-col bg-[#0b0e1b] text-slate-100 relative overflow-hidden">
-      <Background />
-      <Header onMenu={() => setMenuOpen(true)} />
-      <div className="flex-1 flex min-h-0 relative z-10">
-        <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-        <main className="flex-1 min-w-0 overflow-y-auto custom-scrollbar p-4 lg:p-5">
-          <div key={tab} className="animate-fade-up">
-            {PAGES[tab]()}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-xs font-semibold bg-[#4ADE80]/10 text-[#4ADE80] px-3 py-1.5 rounded-full border border-[#4ADE80]/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]">
+               <div className="w-1.5 h-1.5 bg-[#4ADE80] rounded-full animate-pulse"></div>
+               LIVE MARKET
+            </div>
+            <button className="text-[#F5E7D8]/40 hover:text-[#E8A14A] transition-colors"><Bell className="w-5 h-5" /></button>
+            <button className="text-[#F5E7D8]/40 hover:text-[#E8A14A] transition-colors"><Sun className="w-5 h-5" /></button>
           </div>
-        </main>
-      </div>
-      <Toasts />
-    </div>
-  );
-}
+        </div>
 
-export default function App() {
-  return (
-    <DashboardProvider>
-      <Shell />
-    </DashboardProvider>
+        {/* MAIN DASHBOARD */}
+        <div className="flex-1 p-8 flex gap-8 overflow-hidden">
+          
+          {/* CENTER: Chart & Tables */}
+          <div className="flex-[2.5] flex flex-col gap-8 min-w-0">
+             
+             {/* HERO CHART */}
+             <div className="glass-panel flex-[1.5] p-6 flex flex-col relative group">
+                <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-[#E8A14A]/40 to-transparent"></div>
+                
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                       <span className="bg-[#E8A14A] text-[#0B0908] text-xs font-bold px-2 py-0.5 rounded">TCS India</span>
+                       <span className="text-sm text-[#F5E7D8]/50">Tata Consultancy Services</span>
+                    </div>
+                    <div className="flex items-end gap-4">
+                      <div className="text-4xl font-light tracking-tight">₹{formatPrice(currentPrice)}</div>
+                      <div className={`text-sm font-medium mb-1 ${changePercent >= 0 ? 'text-success' : 'text-loss'} flex items-center`}>
+                        {changePercent >= 0 ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}
+                        {formatPrice(Math.abs(currentPrice - 3100))} ({Math.abs(changePercent).toFixed(2)}%)
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 bg-[#1C1715] p-1 rounded-lg border border-[#F5E7D8]/5">
+                     {['1D', '1W', '1M', '3M', 'YTD'].map(tf => (
+                       <button key={tf} className={`px-3 py-1 text-xs font-medium rounded-md ${tf === '1D' ? 'bg-[#2A221F] text-[#E8A14A] shadow' : 'text-[#F5E7D8]/40 hover:text-[#F5E7D8]'}`}>
+                         {tf}
+                       </button>
+                     ))}
+                  </div>
+                </div>
+
+                <div className="flex-1 relative w-full h-full mt-4">
+                   <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="volGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#9A6134" stopOpacity={0.4}/>
+                            <stop offset="100%" stopColor="#9A6134" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F5E7D8" strokeOpacity={0.03} vertical={false} />
+                        <XAxis dataKey="time" stroke="#F5E7D8" strokeOpacity={0.3} fontSize={11} tickMargin={10} axisLine={false} tickLine={false} />
+                        <YAxis yAxisId="price" stroke="#F5E7D8" strokeOpacity={0.3} fontSize={11} axisLine={false} tickLine={false} domain={['auto', 'auto']} orientation="right" />
+                        <YAxis yAxisId="vol" hide domain={[0, 'dataMax * 5']} />
+                        
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1C1715', borderColor: 'rgba(232, 161, 74, 0.2)', borderRadius: '12px' }}
+                          itemStyle={{ color: '#E8A14A' }}
+                        />
+
+                        <Bar yAxisId="vol" dataKey="volume" fill="url(#volGradient)" />
+                        <Bar yAxisId="price" dataKey="range" shape={<Candlestick />} isAnimationActive={false} />
+                      </ComposedChart>
+                   </ResponsiveContainer>
+                </div>
+             </div>
+
+             {/* TABLES BOTTOM */}
+             <div className="flex-1 flex gap-8 min-h-0">
+                {/* Market Depth */}
+                <div className="surface-card flex-1 p-5 flex flex-col hover-lift">
+                   <div className="text-sm font-semibold text-[#E8A14A] mb-4 flex justify-between">
+                     MARKET DEPTH
+                     <span className="text-[#F5E7D8]/30 text-xs">Spread: 0.25</span>
+                   </div>
+                   <div className="flex-1 flex gap-4 text-xs font-mono overflow-hidden">
+                     <div className="flex-1 flex flex-col">
+                       <div className="flex justify-between text-[#F5E7D8]/40 mb-2 border-b border-[#F5E7D8]/10 pb-1"><span>Bid</span><span>Size</span></div>
+                       <div className="flex-1 overflow-hidden flex flex-col">
+                         {bids.map((b, i) => (
+                           <div key={i} className="flex justify-between py-1 hover:bg-[#F5E7D8]/5 rounded px-1 cursor-pointer relative group">
+                             <div className="absolute right-0 top-1/2 -translate-y-1/2 h-4 bg-[#4ADE80]/10 rounded-l" style={{ width: `${Math.min(100, b.size * 2)}%` }}></div>
+                             <span className="text-success relative z-10">{formatPrice(b.price)}</span>
+                             <span className="text-[#F5E7D8]/70 relative z-10">{b.size}</span>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                     <div className="flex-1 flex flex-col">
+                       <div className="flex justify-between text-[#F5E7D8]/40 mb-2 border-b border-[#F5E7D8]/10 pb-1"><span>Ask</span><span>Size</span></div>
+                       <div className="flex-1 overflow-hidden flex flex-col">
+                         {asks.map((a, i) => (
+                           <div key={i} className="flex justify-between py-1 hover:bg-[#F5E7D8]/5 rounded px-1 cursor-pointer relative">
+                             <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 bg-[#F87171]/10 rounded-r" style={{ width: `${Math.min(100, a.size * 2)}%` }}></div>
+                             <span className="text-loss relative z-10">{formatPrice(a.price)}</span>
+                             <span className="text-[#F5E7D8]/70 relative z-10">{a.size}</span>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   </div>
+                </div>
+
+                {/* Time & Sales */}
+                <div className="surface-card flex-[1.2] p-5 flex flex-col hover-lift">
+                   <div className="text-sm font-semibold text-[#E8A14A] mb-4">TIME & SALES</div>
+                   <div className="flex justify-between text-[#F5E7D8]/40 mb-2 border-b border-[#F5E7D8]/10 pb-1 text-xs">
+                     <span className="w-1/3">Time</span>
+                     <span className="w-1/3 text-right">Price</span>
+                     <span className="w-1/3 text-right">Qty</span>
+                   </div>
+                   <div className="flex-1 overflow-y-auto custom-scrollbar text-xs font-mono pr-2">
+                      {tape.map((t, i) => (
+                        <div key={i} className="flex justify-between py-1.5 hover:bg-[#F5E7D8]/5 rounded px-1 border-b border-[#F5E7D8]/5 last:border-0">
+                          <span className="w-1/3 text-[#F5E7D8]/50">{t.time}</span>
+                          <span className={`w-1/3 text-right ${t.side === 'Buy' ? 'text-success drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]' : 'text-loss drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]'}`}>
+                            {formatPrice(t.price)}
+                          </span>
+                          <span className="w-1/3 text-right text-[#F5E7D8]/80">{t.size}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+          </div>
+
+          {/* RIGHT: Assistant & Tools */}
+          <div className="w-[360px] flex flex-col gap-8 shrink-0 overflow-y-auto custom-scrollbar pr-2 pb-8">
+             
+             {/* AI Decision Loop */}
+             <div className="glass-panel p-6">
+                <div className="flex items-center justify-between mb-6">
+                   <div className="font-semibold text-lg">AI Decision Loop</div>
+                   <div className="text-xs bg-[#E8A14A]/20 text-[#E8A14A] px-2 py-1 rounded-full flex items-center gap-1 border border-[#E8A14A]/30">
+                     <Cpu className="w-3 h-3" /> GPT-4 Active
+                   </div>
+                </div>
+
+                <div className="relative pl-4 border-l border-[#E8A14A]/20 space-y-6">
+                   <div className="relative">
+                     <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#E8A14A] shadow-[0_0_10px_#E8A14A]"></div>
+                     <div className="text-sm font-medium">Market Research</div>
+                     <div className="text-xs text-[#F5E7D8]/50 mt-1">Analyzing order book liquidity...</div>
+                   </div>
+                   <div className="relative">
+                     <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#E8A14A] shadow-[0_0_10px_#E8A14A]"></div>
+                     <div className="text-sm font-medium">Pattern Recognition</div>
+                     <div className="text-xs text-[#F5E7D8]/50 mt-1">Found micro-trend divergence.</div>
+                   </div>
+                   <div className="relative opacity-50">
+                     <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-[#E8A14A] bg-[#1C1715]"></div>
+                     <div className="text-sm font-medium">Risk Analysis</div>
+                     <div className="text-xs mt-1">Calculating VaR exposure...</div>
+                     <div className="h-1 w-full bg-[#1C1715] rounded-full mt-2 overflow-hidden border border-[#F5E7D8]/10">
+                        <div className="h-full bg-[#E8A14A] w-[78%] shadow-[0_0_10px_#E8A14A] animate-progress"></div>
+                     </div>
+                   </div>
+                   <div className="relative opacity-30">
+                     <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-[#F5E7D8]/30 bg-[#1C1715]"></div>
+                     <div className="text-sm font-medium">Execute Trade</div>
+                     <div className="text-xs mt-1">Waiting for risk clearance.</div>
+                   </div>
+                </div>
+
+                <div className="mt-8 bg-[#4ADE80]/10 border border-[#4ADE80]/30 rounded-xl p-4 flex items-center justify-between">
+                   <div>
+                     <div className="text-xs text-[#4ADE80] font-semibold mb-1 uppercase tracking-wider">AI Recommendation</div>
+                     <div className="text-lg font-bold">BUY 50 TCS</div>
+                   </div>
+                   <div className="w-12 h-12 rounded-full border-4 border-[#4ADE80]/20 border-t-[#4ADE80] flex items-center justify-center animate-spin">
+                      <div className="text-xs font-bold text-[#4ADE80] animate-none" style={{animationDuration: '0s'}}>78%</div>
+                   </div>
+                </div>
+             </div>
+
+             {/* Quick Trade Widget */}
+             <div className="surface-card p-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-[#E8A14A]/10 hover-lift relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#E8A14A]/5 rounded-full blur-3xl"></div>
+                <div className="text-lg font-semibold mb-4">Quick Trade</div>
+                
+                <div className="flex gap-2 p-1 bg-[#0B0908] rounded-lg mb-6 border border-[#F5E7D8]/5">
+                   <button className="flex-1 bg-[#1C1715] text-sm py-1.5 rounded-md font-medium text-[#E8A14A] shadow">Limit</button>
+                   <button className="flex-1 text-[#F5E7D8]/40 text-sm py-1.5 font-medium hover:text-[#F5E7D8]">Market</button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div className="bg-[#0B0908] border border-[#F5E7D8]/10 rounded-xl p-3 flex justify-between items-center focus-within:border-[#E8A14A]/40 transition-colors">
+                     <span className="text-sm text-[#F5E7D8]/50">Qty</span>
+                     <input type="text" defaultValue="50" className="bg-transparent text-right text-lg font-medium outline-none w-20 text-[#F5E7D8]" />
+                  </div>
+                  <div className="bg-[#0B0908] border border-[#F5E7D8]/10 rounded-xl p-3 flex justify-between items-center focus-within:border-[#E8A14A]/40 transition-colors">
+                     <span className="text-sm text-[#F5E7D8]/50">Price</span>
+                     <input type="text" value={formatPrice(currentPrice)} readOnly className="bg-transparent text-right text-lg font-medium outline-none w-24 text-[#F5E7D8]" />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                   <button className="flex-1 bg-gradient-to-b from-[#4ADE80] to-[#22c55e] text-[#0B0908] font-bold py-3 rounded-xl shadow-[0_4px_15px_rgba(74,222,128,0.3)] hover:shadow-[0_6px_20px_rgba(74,222,128,0.5)] transition-all hover:-translate-y-0.5">
+                     BUY
+                   </button>
+                   <button className="flex-1 bg-gradient-to-b from-[#F87171] to-[#ef4444] text-[#0B0908] font-bold py-3 rounded-xl shadow-[0_4px_15px_rgba(248,113,113,0.3)] hover:shadow-[0_6px_20px_rgba(248,113,113,0.5)] transition-all hover:-translate-y-0.5">
+                     SELL
+                   </button>
+                </div>
+             </div>
+
+             {/* AI PNL Analytics */}
+             <div className="surface-card p-6 hover-lift">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="text-sm font-semibold text-[#E8A14A]">PERFORMANCE</div>
+                  <div className="text-xs bg-[#E8A14A]/10 text-[#E8A14A] px-2 py-1 rounded">Today</div>
+                </div>
+                
+                <div className="mb-6">
+                   <div className="text-3xl font-light text-success drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">+$12,450.00</div>
+                   <div className="text-sm text-[#F5E7D8]/50 mt-1">Daily Unrealized PNL</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                   <div>
+                     <div className="text-[#F5E7D8]/40 text-xs mb-1">Win Rate</div>
+                     <div className="text-lg font-medium">84.2%</div>
+                   </div>
+                   <div>
+                     <div className="text-[#F5E7D8]/40 text-xs mb-1">AI Accuracy</div>
+                     <div className="text-lg font-medium">92.5%</div>
+                   </div>
+                </div>
+
+                <div className="h-20 w-full relative">
+                   <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={pnlData}>
+                        <defs>
+                          <linearGradient id="pnlGlow" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#E8A14A" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#E8A14A" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="val" stroke="#E8A14A" strokeWidth={2} fill="url(#pnlGlow)" isAnimationActive={false} />
+                      </AreaChart>
+                   </ResponsiveContainer>
+                </div>
+             </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

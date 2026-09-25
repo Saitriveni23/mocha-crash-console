@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
+
+body {
+  background-color: #0B0908;
+  color: #F5E7D8;
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(154, 97, 52, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(154, 97, 52, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+}
+
+/* Custom styling for Recharts Tooltip */
+.recharts-default-tooltip {
+  background-color: #1C1715 !important;
+  border: 1px solid rgba(232, 161, 74, 0.2) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  color: #F5E7D8 !important;
+}
+
+.recharts-tooltip-item {
+  color: #E8A14A !important;
+}
+
+/* Glassmorphism panel base */
+.glass-panel {
+  background: rgba(21, 18, 16, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 231, 216, 0.05);
+  border-top: 1px solid rgba(245, 231, 216, 0.1);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  border-radius: 24px;
+}
+
+.surface-card {
+  background: #1C1715;
+  border: 1px solid rgba(245, 231, 216, 0.05);
+  border-radius: 16px;
+}
+
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 161, 74, 0.1);
+  border-color: rgba(232, 161, 74, 0.3);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-progress {
+  animation: progress-fill 2s ease-out forwards;
+}
+
+.text-gold { color: #E8A14A; }
+.text-copper { color: #9A6134; }
+.text-beige { color: #F5E7D8; }
+.text-success { color: #4ADE80; }
+.text-loss { color: #F87171; }
+
+.bg-gold { background-color: #E8A14A; }
+.bg-copper { background-color: #9A6134; }
+.bg-success { background-color: rgba(74, 222, 128, 0.15); color: #4ADE80; }
+.bg-loss { background-color: rgba(248, 113, 113, 0.15); color: #F87171; }
