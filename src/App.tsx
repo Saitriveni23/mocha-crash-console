@@ -114,7 +114,6 @@ function Header({ onMenu }: { onMenu: () => void }) {
           </div>
           <div className="leading-tight">
             <div className="text-xs font-bold text-white">Ops Team</div>
-            <div className="text-[11px] text-slate-400">{TEAM_MEMBERS.length} online</div>
           </div>
         </div>
       </div>
