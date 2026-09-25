@@ -9,6 +9,61 @@ import type {
   AlertRule,
   LiveTradeFeedItem
 } from './types';
+import type { ResponseAction, RiskActionPlanStage } from './types';
+
+// Deliberately staged response plans for the demo. The store advances one stage every 10 minutes.
+export const RISK_ACTION_PLAN_STAGES: RiskActionPlanStage[] = [
+  {
+    phase: 'Monitor & Validate',
+    summary: 'Early warning conditions are being validated against market, oracle, support, and sentiment signals.',
+    actions: [
+      'Increase monitoring frequency and confirm the five risk inputs are receiving fresh data.',
+      'Review liquidity concentration and compare prices across venues.',
+      'Prepare an internal advisory while keeping customer-facing controls unchanged.',
+    ],
+  },
+  {
+    phase: 'Containment',
+    summary: 'Risk is persistent across multiple indicators. Containment controls should be prepared and coordinated.',
+    actions: [
+      'Reduce leverage limits and increase margin buffers for the most exposed pairs.',
+      'Validate oracle freshness and route execution away from unhealthy venues.',
+      'Prepare a customer advisory and keep the incident commander on call.',
+    ],
+  },
+  {
+    phase: 'Stabilization',
+    summary: 'The incident requires active stabilization while the risk score remains elevated.',
+    actions: [
+      'Pause new high-risk leveraged positions and monitor liquidation queues closely.',
+      'Apply circuit-breaker controls only to affected pairs and review their impact.',
+      'Escalate unresolved support and execution issues to the operations lead.',
+    ],
+  },
+  {
+    phase: 'Recovery & Review',
+    summary: 'Signals are being watched for sustained recovery before controls are gradually removed.',
+    actions: [
+      'Restore limits in phases only after oracle health and price spreads remain stable.',
+      'Send an all-clear update when the score stays below the recovery threshold.',
+      'Record affected executions and complete the post-incident review.',
+    ],
+  },
+];
+
+export const INITIAL_RESPONSE_ACTIONS: ResponseAction[] = [
+  { id: 'action-1', text: 'Validate oracle freshness and cross-exchange price divergence', ownerId: 'm2', status: 'In progress', stage: 'Monitor & Validate' },
+  { id: 'action-2', text: 'Review abnormal liquidation clusters and affected positions', ownerId: 'm2', status: 'Pending', stage: 'Containment' },
+  { id: 'action-3', text: 'Prepare and approve the customer volatility advisory', ownerId: 'm3', status: 'Pending', stage: 'Containment' },
+  { id: 'action-4', text: 'Approve temporary leverage and margin controls', ownerId: 'm1', status: 'Pending', stage: 'Stabilization' },
+  { id: 'action-5', text: 'Confirm recovery conditions and record the post-incident review', ownerId: 'm1', status: 'Pending', stage: 'Recovery & Review' },
+];
+
+export const TEAM_WORKLOAD = [
+  { memberId: 'm1', allocation: 40, focus: 'Command, approvals & escalation', queue: 'Decision ownership' },
+  { memberId: 'm2', allocation: 35, focus: 'Oracle, liquidity & executions', queue: 'Market validation' },
+  { memberId: 'm3', allocation: 25, focus: 'Customer support & broadcasts', queue: 'Comms and ticket triage' },
+];
 
 export const TOP_LIQUIDATIONS_DATA: LiquidationRow[] = [
   { pair: 'BTC/USDT', amount: '4,821.32M', delta: '+320%', iconType: 'btc', volume: 4821.32 },

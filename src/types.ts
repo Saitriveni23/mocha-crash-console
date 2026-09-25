@@ -70,6 +70,18 @@ export interface TeamMember {
   isCurrentUser?: boolean;
 }
 
+export type ResponseActionStatus = 'Pending' | 'In progress' | 'Completed';
+
+export interface ResponseAction {
+  id: string;
+  text: string;
+  ownerId: string;
+  status: ResponseActionStatus;
+  stage: string;
+  evidence?: string;
+  completedAt?: string;
+}
+
 export interface RegionalHotspot {
   id: string;
   city: string;
@@ -127,4 +139,33 @@ export interface UserAlert {
   message: string;
   price: number;
   threshold: number;
+}
+
+export type RiskLevel = 'NORMAL' | 'ELEVATED' | 'HIGH' | 'CRITICAL';
+
+export interface RiskFactorScore {
+  key: 'liquidations' | 'priceDeviation' | 'oracleHealth' | 'supportTickets' | 'sentiment';
+  label: string;
+  value: string;
+  riskScore: number;
+  weight: number;
+  contribution: number;
+  explanation: string;
+}
+
+export interface RiskScoreReport {
+  score: number;
+  level: RiskLevel;
+  factors: RiskFactorScore[];
+  actions: string[];
+  summary: string;
+  generatedAt: string;
+  phase: string;
+  nextUpdateInSeconds: number;
+}
+
+export interface RiskActionPlanStage {
+  phase: string;
+  summary: string;
+  actions: string[];
 }

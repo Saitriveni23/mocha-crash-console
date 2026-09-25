@@ -1,4 +1,4 @@
-import { AlertTriangle, BellOff, BellRing, CheckCircle2, ChevronRight, PauseCircle, PhoneCall, PlayCircle, ShieldAlert, Siren } from 'lucide-react';
+import { AlertTriangle, BellOff, BellRing, CheckCircle2, ChevronRight, ClipboardList, PauseCircle, PhoneCall, PlayCircle, ShieldAlert, Siren } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Avatar, Card, CardTitle, PageHeader, Pill } from '../components/ui';
 import { tooltipStyle } from '../lib';
@@ -31,7 +31,7 @@ const ALERT_VOLUME = [
 ];
 
 export default function Alerts() {
-  const { alerts, setAlerts, addLog, notify } = useDashboard();
+  const { alerts, setAlerts, addLog, notify, riskReport } = useDashboard();
 
   const update = (id: string, patch: Partial<AlertRule>) => setAlerts(a => a.map(x => (x.id === id ? { ...x, ...patch } : x)));
 
@@ -73,6 +73,58 @@ export default function Alerts() {
           </Card>
         ))}
       </div>
+
+      <Card className="p-5 border-purple-500/30">
+        <CardTitle
+          icon={<ClipboardList className="w-4 h-4" />}
+          iconClass="bg-purple-500/20 text-purple-300"
+          title="Transparent Risk Score & Action Plan"
+          subtitle={`${riskReport.phase} · generated at ${riskReport.generatedAt} · plan changes every 10 minutes`}
+          right={
+            <Pill className={riskReport.level === 'CRITICAL' ? 'border-rose-500/50 text-rose-300' : riskReport.level === 'HIGH' ? 'border-orange-500/50 text-orange-300' : riskReport.level === 'ELEVATED' ? 'border-amber-500/50 text-amber-300' : 'border-emerald-500/40 text-emerald-300'}>
+              {riskReport.level}
+            </Pill>
+          }
+        />
+        <div className="grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-6">
+          <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-5 flex flex-col justify-center">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Composite score</div>
+            <div className="text-5xl font-extrabold text-white font-mono-numbers mt-1">{riskReport.score}</div>
+            <div className="text-sm text-slate-300 mt-3 leading-relaxed">{riskReport.summary}</div>
+            <div className="text-[11px] text-slate-500 mt-3">
+              {riskReport.nextUpdateInSeconds > 0
+                ? `Next plan review in ${Math.floor(riskReport.nextUpdateInSeconds / 60)}m ${riskReport.nextUpdateInSeconds % 60}s`
+                : 'Final recovery plan remains active while the simulation continues.'}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Calculation breakdown</div>
+            {riskReport.factors.map(factor => (
+              <div key={factor.key}>
+                <div className="flex items-center justify-between gap-3 text-xs mb-1">
+                  <span className="font-semibold text-white">{factor.label} <span className="text-slate-500">({factor.weight}%)</span></span>
+                  <span className="text-slate-300 font-mono-numbers">{factor.value} · risk {factor.riskScore.toFixed(0)}</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full bg-linear-to-r from-purple-500 to-pink-500" style={{ width: `${factor.riskScore}%` }} />
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">Contribution: {factor.contribution.toFixed(1)} points. {factor.explanation}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-6 pt-4 border-t border-white/5">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Generated action plan</div>
+          <ol className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {riskReport.actions.map((action, index) => (
+              <li key={action} className="flex items-start gap-2 text-sm text-slate-200 bg-white/[0.03] border border-white/5 rounded-lg p-3">
+                <span className="text-purple-300 font-bold">{index + 1}.</span><span className="flex-1">{action}</span>
+                <button onClick={() => { addLog(`Recommended action selected: ${action}`, 'Ops', 'You (Team Lead)', 'pending'); notify('Action added to incident log', 'info'); }} className="shrink-0 text-[10px] font-bold text-purple-300 hover:text-white border border-purple-400/30 rounded-md px-2 py-1">Log action</button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 *:min-w-0 xl:grid-cols-[1.4fr_1fr] gap-4">
         <div className="space-y-3">

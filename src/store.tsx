@@ -5,8 +5,10 @@ import {
   COMMUNICATION_TEMPLATES,
   INITIAL_INCIDENT_LOG,
   INITIAL_INCIDENT_STEPS,
+  INITIAL_RESPONSE_ACTIONS,
   LIQUIDATION_SPARKLINE,
   LIVE_TRADES_FEED,
+  RISK_ACTION_PLAN_STAGES,
   SENTIMENT_SPARKLINE,
   TICKET_SPARKLINE,
 } from './mockData';
@@ -21,6 +23,8 @@ import type {
   SentMessage,
   Toast,
   UserAlert,
+  RiskScoreReport,
+  ResponseAction,
 } from './types';
 
 export interface Settings {
@@ -34,8 +38,9 @@ export interface Settings {
 }
 
 // Scenario clock: the incident started at 10:34:26, the dashboard opens at 10:47:00
-const SCENARIO_START = new Date(2025, 3, 25, 10, 47, 0).getTime();
+const SCENARIO_START = new Date(2026, 3, 25, 10, 47, 0).getTime();
 const INITIAL_ELAPSED = 12 * 60 + 34;
+const INITIAL_METRICS = { liquidations: 12842, tickets: 1248, sentiment: -72, btcPrice: 61482.32, priceDeviation: 0.84, oracleHealth: 96 };
 
 const HUBS = ['NY Hub', 'London', 'Tokyo', 'Singapore', 'Frankfurt', 'São Paulo'];
 const FEED_PAIRS = [
@@ -75,6 +80,8 @@ function useDashboardState() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
   const [tick, setTick] = useState(0);
+  const [simulationRunning, setSimulationRunning] = useState(true);
+  const [activeUserId, setActiveUserId] = useState('m1');
 
   const [settings, setSettings] = useState<Settings>({
     live: true,
@@ -86,7 +93,7 @@ function useDashboardState() {
     compactMode: false,
   });
 
-  const [metrics, setMetrics] = useState({ liquidations: 12842, tickets: 1248, sentiment: -72, btcPrice: 61482.32 });
+  const [metrics, setMetrics] = useState(INITIAL_METRICS);
   const [liqSpark, setLiqSpark] = useState(LIQUIDATION_SPARKLINE);
   const [ticketSpark, setTicketSpark] = useState(TICKET_SPARKLINE);
   const [sentimentSpark, setSentimentSpark] = useState(SENTIMENT_SPARKLINE);
@@ -102,6 +109,7 @@ function useDashboardState() {
     { id: 's0', time: '10:46', title: 'Market Volatility & Margin Trading Pause', channels: ['Twitter/X', 'In-App Banner'], audience: 'All Users', reach: 184_220 },
   ]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [responseActions, setResponseActions] = useState(INITIAL_RESPONSE_ACTIONS);
 
   const [tcs, setTcs] = useState(initialTcs);
   const [tcsThreshold, setTcsThresholdState] = useState(3000);
@@ -113,9 +121,10 @@ function useDashboardState() {
 
   // One-second clock: drives the header time and the "since anomaly" timer
   useEffect(() => {
+    if (!simulationRunning) return;
     const id = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [simulationRunning]);
 
   const now = new Date(SCENARIO_START + tick * 1000);
   const elapsed = INITIAL_ELAPSED + tick;
@@ -131,7 +140,7 @@ function useDashboardState() {
 
   // Market simulation
   useEffect(() => {
-    if (!settings.live) return;
+    if (!settings.live || !simulationRunning) return;
     const id = setInterval(() => {
       const t = clockHMSRef.current;
       setMetrics(m => ({
@@ -139,6 +148,8 @@ function useDashboardState() {
         tickets: Math.max(0, Math.round(m.tickets + (Math.random() - 0.35) * 46)),
         sentiment: Math.max(-99, Math.min(20, Math.round(m.sentiment + (Math.random() - 0.55) * 3))),
         btcPrice: Math.max(55000, +(m.btcPrice + (Math.random() - 0.55) * 120).toFixed(2)),
+        priceDeviation: Math.max(0, Math.min(5, +(m.priceDeviation + (Math.random() - 0.52) * 0.12).toFixed(2))),
+        oracleHealth: Math.max(0, Math.min(100, Math.round(m.oracleHealth + (Math.random() - 0.55) * 2))),
       }));
       setLiqSpark(s => [...s.slice(1), { t, v: Math.max(0, s[s.length - 1].v + (Math.random() - 0.4) * 1400) }]);
       setTicketSpark(s => [...s.slice(1), { t, v: Math.max(0, s[s.length - 1].v + (Math.random() - 0.4) * 140) }]);
@@ -187,7 +198,7 @@ function useDashboardState() {
       });
     }, settings.speedMs);
     return () => clearInterval(id);
-  }, [settings.live, settings.speedMs]);
+  }, [settings.live, settings.speedMs, simulationRunning]);
 
   const addUserAlert = useCallback((type: UserAlert['type'], message: string, price: number, threshold: number) => {
     setUserAlerts(a => [{ id: uid(), time: clockRef.current, asset: 'TCS', type, message, price, threshold }, ...a]);
@@ -207,6 +218,31 @@ function useDashboardState() {
     setToasts(t => [...t, { id, title, tone }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3200);
   }, []);
+
+  const startSimulation = useCallback(() => setSimulationRunning(true), []);
+  const pauseSimulation = useCallback(() => setSimulationRunning(false), []);
+  const advanceSimulation = useCallback((minutes = 10) => {
+    setSimulationRunning(false);
+    setTick(t => t + minutes * 60);
+    setMetrics(m => ({
+      ...m,
+      liquidations: Math.min(20_000, m.liquidations + 520 + (Math.floor(m.liquidations / 1000) % 3) * 110),
+      tickets: Math.min(2_000, m.tickets + 28 + (Math.floor(m.tickets / 100) % 3) * 8),
+      sentiment: Math.max(-99, m.sentiment - 2),
+      priceDeviation: Math.min(1.8, +(m.priceDeviation + 0.06).toFixed(2)),
+      oracleHealth: Math.max(82, m.oracleHealth - 1),
+    }));
+    notify(`Simulation advanced ${minutes} minutes`, 'info');
+  }, [notify]);
+  const resetSimulation = useCallback(() => {
+    setSimulationRunning(false);
+    setTick(0);
+    setMetrics(INITIAL_METRICS);
+    setSteps(INITIAL_INCIDENT_STEPS);
+    setResponseActions(INITIAL_RESPONSE_ACTIONS);
+    resetTcs();
+    notify('Simulation reset', 'info');
+  }, [notify, resetTcs]);
 
   const addLog = useCallback((text: string, category: LogCategory, author = 'You (Team Lead)', status: IncidentLogItem['status'] = 'done', notes?: string) => {
     setLogs(l => [...l, { id: uid(), time: clockRef.current, text, category, status, author, notes }]);
@@ -252,6 +288,49 @@ function useDashboardState() {
   }, []);
 
   const removeLog = useCallback((id: string) => setLogs(l => l.filter(x => x.id !== id)), []);
+
+  const updateResponseAction = useCallback((id: string, patch: Partial<ResponseAction>) => {
+    const action = responseActions.find(item => item.id === id);
+    if (!action) return;
+
+    const owner = action.ownerId === 'm1' ? 'You (Team Lead)' : action.ownerId === 'm2' ? 'Arjun (Trading Ops)' : 'Meera (Customer Support)';
+    const isCompleting = patch.status === 'Completed' && action.status !== 'Completed';
+    const completedAction: ResponseAction = isCompleting
+      ? { ...action, ...patch, status: 'Completed', completedAt: clockRef.current, evidence: patch.evidence ?? `Confirmed by ${owner} in the incident console.` }
+      : { ...action, ...patch };
+    const nextActions = responseActions.map(item => item.id === id ? completedAction : item);
+
+    if (isCompleting) {
+      addLog(`Completed response action: ${action.text}`, 'Ops', owner, 'done', completedAction.evidence);
+
+      // A stage is unlocked only after every assigned action in that stage is complete.
+      const stageComplete = nextActions.filter(item => item.stage === action.stage).every(item => item.status === 'Completed');
+      if (stageComplete) {
+        const stageOrder = ['Monitor & Validate', 'Containment', 'Stabilization', 'Recovery & Review'];
+        const stageIndex = stageOrder.indexOf(action.stage);
+        const nextStage = stageOrder[stageIndex + 1];
+        const nextPending = nextStage ? nextActions.find(item => item.stage === nextStage && item.status === 'Pending') : undefined;
+        if (nextPending) {
+          nextPending.status = 'In progress';
+          addLog(`Unlocked next response stage: ${nextStage}`, 'Ops', 'Risk Engine');
+        }
+        setSteps(current => {
+          const stepIndex = Math.max(0, Math.min(current.length - 1, stageIndex));
+          return current.map((step, index) => index === stepIndex
+            ? { ...step, status: 'Completed' }
+            : index === stepIndex + 1 && nextStage
+              ? { ...step, status: 'In progress' }
+              : step);
+        });
+      } else {
+        // Keep one clearly prompted task at a time within the active stage.
+        const nextSameStage = nextActions.find(item => item.stage === action.stage && item.status === 'Pending');
+        if (nextSameStage) nextSameStage.status = 'In progress';
+      }
+    }
+
+    setResponseActions(nextActions);
+  }, [addLog, responseActions]);
 
   // Complete the first in-progress step and start the next pending one
   const advanceStep = useCallback(() => {
@@ -304,13 +383,88 @@ function useDashboardState() {
 
   const activeAlerts = alerts.filter(a => a.status === 'FIRING' && !a.acknowledged).length;
 
+  // Transparent weighted risk model. Each input is normalized to 0-100 before its weight is applied.
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  const riskFactors = [
+    {
+      key: 'liquidations' as const,
+      label: 'Liquidations',
+      value: `${metrics.liquidations.toLocaleString('en-US')} / 60s`,
+      riskScore: clamp((metrics.liquidations / Math.max(1, settings.liquidationThreshold)) * 100),
+      weight: 25,
+      explanation: `Compared with the ${settings.liquidationThreshold.toLocaleString('en-US')} / 60s threshold.`,
+    },
+    {
+      key: 'priceDeviation' as const,
+      label: 'Price deviation',
+      value: `${metrics.priceDeviation.toFixed(2)}% vs index`,
+      riskScore: clamp((metrics.priceDeviation / 1.5) * 100),
+      weight: 20,
+      explanation: '1.50% deviation is treated as the critical reference point.',
+    },
+    {
+      key: 'oracleHealth' as const,
+      label: 'Oracle health',
+      value: `${metrics.oracleHealth}% healthy`,
+      riskScore: clamp(100 - metrics.oracleHealth),
+      weight: 20,
+      explanation: 'Risk increases as oracle availability and freshness fall below 100%.',
+    },
+    {
+      key: 'supportTickets' as const,
+      label: 'Support tickets',
+      value: `${metrics.tickets.toLocaleString('en-US')} / min`,
+      riskScore: clamp((metrics.tickets / Math.max(1, settings.ticketThreshold)) * 100),
+      weight: 15,
+      explanation: `Compared with the ${settings.ticketThreshold.toLocaleString('en-US')} / min threshold.`,
+    },
+    {
+      key: 'sentiment' as const,
+      label: 'Sentiment analysis',
+      value: `${metrics.sentiment}% net sentiment`,
+      riskScore: clamp(-metrics.sentiment),
+      weight: 20,
+      explanation: 'Negative sentiment is converted directly into risk points.',
+    },
+  ];
+  const riskScore = riskFactors.reduce((sum, factor) => sum + (factor.riskScore * factor.weight) / 100, 0);
+  const riskLevel: RiskScoreReport['level'] = riskScore >= 80 ? 'CRITICAL' : riskScore >= 60 ? 'HIGH' : riskScore >= 30 ? 'ELEVATED' : 'NORMAL';
+  // Action plans deliberately change only every 10 minutes, not on every metric tick.
+  const planWindowSeconds = 10 * 60;
+  const planStageIndex = Math.min(Math.floor((tick || 0) / planWindowSeconds), RISK_ACTION_PLAN_STAGES.length - 1);
+  const planStage = RISK_ACTION_PLAN_STAGES[planStageIndex];
+  const nextUpdateInSeconds = planStageIndex === RISK_ACTION_PLAN_STAGES.length - 1
+    ? 0
+    : planWindowSeconds - ((tick || 0) % planWindowSeconds);
+  const severityAction = riskLevel === 'CRITICAL'
+    ? 'Executive escalation is required now; activate the critical incident bridge.'
+    : riskLevel === 'HIGH'
+      ? 'Keep high-risk trading controls engaged until the score improves.'
+      : riskLevel === 'ELEVATED'
+        ? 'Keep the response team on watch and prepare to escalate if another signal worsens.'
+        : 'No additional trading restriction is recommended while the score remains normal.';
+  const actions = [severityAction, ...planStage.actions];
+  const riskReport: RiskScoreReport = {
+    score: Number(riskScore.toFixed(1)),
+    level: riskLevel,
+    factors: riskFactors.map(factor => ({ ...factor, contribution: Number(((factor.riskScore * factor.weight) / 100).toFixed(1)) })),
+    actions,
+    summary: `${planStage.summary} Current severity is ${riskLevel.toLowerCase()}.`,
+    generatedAt: clockHM,
+    phase: planStage.phase,
+    nextUpdateInSeconds,
+  };
+
   return {
     tab, setTab,
-    now, elapsed, clockHM,
+    now, elapsed, simulationElapsed: tick, clockHM,
     settings, setSettings,
-    metrics, liqSpark, ticketSpark, sentimentSpark, btcSeries, feed,
+    metrics, liqSpark, ticketSpark, sentimentSpark, btcSeries, feed, riskReport,
+    simulationRunning, startSimulation, pauseSimulation, advanceSimulation, resetSimulation,
+    activeUserId, setActiveUserId,
     logs, addLog, toggleLog, removeLog,
     steps, advanceStep, resetSteps,
+    responseActions, updateResponseAction,
     alerts, setAlerts, activeAlerts,
     templates, setTemplates, selectedTemplateId, setSelectedTemplateId,
     sent, sendMessage,
