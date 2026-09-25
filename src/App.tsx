@@ -10,6 +10,7 @@ import {
   Menu,
   MessageSquareText,
   Settings as SettingsIcon,
+  Target,
   X,
   XCircle,
   Zap,
@@ -21,6 +22,7 @@ import Alerts from './pages/Alerts';
 import Communications from './pages/Communications';
 import IncidentLog from './pages/IncidentLog';
 import LiveFeeds from './pages/LiveFeeds';
+import MarketMonitor from './pages/MarketMonitor';
 import Overview from './pages/Overview';
 import Settings from './pages/Settings';
 import Templates from './pages/Templates';
@@ -29,6 +31,7 @@ import type { NavigationTab } from './types';
 
 const NAV: { id: NavigationTab; icon: ReactNode }[] = [
   { id: 'Overview', icon: <Home className="w-[18px] h-[18px]" /> },
+  { id: 'Market Monitor', icon: <Target className="w-[18px] h-[18px]" /> },
   { id: 'Live Feeds', icon: <Activity className="w-[18px] h-[18px]" /> },
   { id: 'Alerts', icon: <Bell className="w-[18px] h-[18px]" /> },
   { id: 'Communications', icon: <MessageSquareText className="w-[18px] h-[18px]" /> },
@@ -39,6 +42,7 @@ const NAV: { id: NavigationTab; icon: ReactNode }[] = [
 
 const PAGES: Record<NavigationTab, () => ReactNode> = {
   Overview: () => <Overview />,
+  'Market Monitor': () => <MarketMonitor />,
   'Live Feeds': () => <LiveFeeds />,
   Alerts: () => <Alerts />,
   Communications: () => <Communications />,
@@ -115,7 +119,8 @@ function Header({ onMenu }: { onMenu: () => void }) {
 }
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { tab, setTab, activeAlerts } = useDashboard();
+  const { tab, setTab, activeAlerts, userAlerts } = useDashboard();
+  const badges: Partial<Record<NavigationTab, number>> = { Alerts: activeAlerts, 'Market Monitor': userAlerts.length };
 
   return (
     <>
@@ -146,9 +151,9 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
               >
                 {n.icon}
                 {n.id}
-                {n.id === 'Alerts' && activeAlerts > 0 && (
+                {!!badges[n.id] && (
                   <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center glow-pink">
-                    {activeAlerts}
+                    {badges[n.id]}
                   </span>
                 )}
               </button>

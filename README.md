@@ -1,18 +1,29 @@
-# MochaTrade: Flash-Crash Ops Console (Track 3 Prototype)
+# MochaTrade: Flash-Crash Ops Console & Personal Alert System
 
-A premium, interactive fintech operations dashboard designed for the **MochaTrade** Round 2 Case Competition. This prototype specifically addresses **Track 3: The Flash-Crash Simulation**, demonstrating how an operations team would handle extreme market volatility using a modern, user-friendly interface.
+A premium, interactive fintech dashboard designed for the **MochaTrade** competition. This prototype addresses **Track 3: The Flash-Crash Simulation**, demonstrating how an operations team handles extreme market volatility, whilst additionally introducing a **Real-Time Market Monitoring and Personalized Threshold Alert System** for individual users (Layer 1 vs Layer 2 incident logic).
 
-## ✨ Features
+## ✨ New Major Feature: Market Monitor & Threshold Engine
 
-- **Real-Time Simulation**: Hit the "Run Flash-Crash Scenario" button to start a live simulation injecting simulated volatility, liquidations, and support ticket spikes directly into the dashboard metrics and charts.
-- **Dynamic Double Area Chart**: Real-time visualization of incoming support tickets vs. market liquidations during the crash.
-- **Tabbed Ops Interface**:
-  - **Decision Log**: An automated timeline of system warnings and manual team actions.
-  - **Team Chat**: A simulated internal collaboration feed where your CTO and Risk Lead drop updates as the crisis unfolds.
-  - **Social Sentiment**: A live feed of user reactions (from panic to neutral) that updates as market conditions change.
-- **Editable Incident Communications**: Select from pre-approved communication templates (Twitter, In-App, Email), customize the draft in the live text editor, and dispatch them directly to the social feed.
-- **Post-Incident Reporting**: A dedicated "Reports" tab that automatically generates a Flash-Crash Post-Mortem, summarizing peak incident metrics and timeline decisions for executive review.
-- **Premium Pastel Glassmorphism UI**: Completely breaks away from the generic dark-mode trading terminal trope. Features an elegant Apple/Linear/Notion-inspired design with warm ivory backgrounds, soft pastel gradients, rounded glass cards, and organic mountain illustrations.
+The newest addition to the dashboard connects individual user protection with platform-level incident response.
+- **TCS Market Simulation**: Observe a real-time price feed for TCS stock, charted against your alert threshold.
+- **Automated User Alerts (Layer 1)**: The system tracks a user-defined threshold (default TCS price < ₹3,000, editable on the page). As the simulated market crashes, it triggers localized `WARNING` (approaching threshold) and `CRITICAL` (crossed threshold) alerts.
+- **Platform Incident Context (Layer 2)**: The system clearly contrasts individual user alerts with the broader systemic impact, monitoring massive liquidation spikes and support queue timeouts concurrently.
+- **No Autonomous Execution**: Emphasizing intelligent monitoring over robotic trading, the system alerts the user and provides actionable paths (`[View Market Data]`, `[Dismiss]`) rather than executing forced buy/sell orders.
+
+## ✨ Flash-Crash Ops Console
+
+A dark neon incident-response dashboard. Every page shares one live-simulated incident, so actions on one page show up on the others.
+
+- **Overview**: Flash-crash banner with a live "since anomaly" timer, response status, liquidation / support-ticket / sentiment sparklines, BTC price chart with a regional hotspot map, key alerts, top liquidations, incident log, quick actions and team view.
+- **Market Monitor**: The TCS personal threshold alerts described above.
+- **Live Feeds**: Price ticker, per-pair price and volume chart, streaming trade feed (filter / pause), clickable regional hotspots and liquidation volume by pair.
+- **Alerts**: Threshold rules that fire from live metrics; acknowledge, escalate or pause them; alert volume chart and escalation chain.
+- **Communications**: Pick a pre-approved template, edit it, choose audience and channels, preview it as an X post, in-app banner or email, then confirm and send.
+- **Incident Log**: Response stages, a searchable and filterable timeline, add / delete / resolve entries, category breakdown and Markdown export.
+- **Templates**: Search, filter, create, copy, delete, or send a template straight to Communications.
+- **Settings**: Live-stream on/off and speed, alert thresholds, which channels Communications may use, compact tables.
+
+Pages are deep-linkable (e.g. `/#market-monitor`) and the layout works down to phone width.
 
 ## 🚀 Getting Started
 
@@ -46,22 +57,3 @@ npm run dev
 ```
 
 The application will typically run on `http://localhost:5173` (or the next available port).
-
-## 🛠️ Technology Stack
-
-- **React 18**
-- **Vite**
-- **Tailwind CSS v4** (for rapid, modern styling and glassmorphism effects)
-- **Recharts** (for the dynamic double area chart)
-- **Lucide React** (for beautiful, consistent iconography)
-
-## 🎨 Design System
-
-- **Background**: Warm Ivory (`#FFF8F3`) with `mix-blend-multiply` gradient blobs.
-- **Cards**: `bg-white/60` with `backdrop-blur-xl` and subtle borders to create a premium frosted glass effect.
-- **Accents**: 
-  - System Health / Dashboard: Sage Mint (`#D7F5E8`)
-  - Liquidations / Live Markets: Rose Pink (`#F7B6C2`)
-  - Volatility / Incidents: Amber (`#FFE8A3`)
-  - System Load / Reports: Lavender (`#E8DDFD`)
-  - Communications / Tickets: Peach Coral (`#FFD9C8`)

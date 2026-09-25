@@ -1,5 +1,6 @@
 export type NavigationTab =
   | 'Overview'
+  | 'Market Monitor'
   | 'Live Feeds'
   | 'Alerts'
   | 'Communications'
@@ -116,4 +117,14 @@ export interface Toast {
   id: string;
   title: string;
   tone: 'success' | 'info' | 'danger';
+}
+
+export interface UserAlert {
+  id: string;
+  time: string;
+  asset: string;
+  type: 'WARNING' | 'CRITICAL';
+  message: string;
+  price: number;
+  threshold: number;
 }

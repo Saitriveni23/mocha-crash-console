@@ -20,6 +20,7 @@ import type {
   NavigationTab,
   SentMessage,
   Toast,
+  UserAlert,
 } from './types';
 
 export interface Settings {
@@ -44,11 +45,20 @@ const FEED_PAIRS = [
   { pair: 'BNB/USDT', unit: 'BNB', price: 532, qty: [100, 2000] },
 ];
 
+// TCS personal price-alert simulation (Layer 1: individual user protection)
+export const TCS_REFERENCE = 3120;
+export const TCS_WARNING_BAND = 25;
+const initialTcs = () => ({
+  price: TCS_REFERENCE,
+  volume: 12_400,
+  history: [{ t: '10:47:00', price: TCS_REFERENCE }],
+});
+
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-const TABS: NavigationTab[] = ['Overview', 'Live Feeds', 'Alerts', 'Communications', 'Incident Log', 'Templates', 'Settings'];
-const toSlug = (t: NavigationTab) => t.toLowerCase().replace(' ', '-');
+const TABS: NavigationTab[] = ['Overview', 'Market Monitor', 'Live Feeds', 'Alerts', 'Communications', 'Incident Log', 'Templates', 'Settings'];
+const toSlug = (t: NavigationTab) => t.toLowerCase().replaceAll(' ', '-');
 const tabFromHash = () => TABS.find(t => toSlug(t) === window.location.hash.slice(1)) ?? 'Overview';
 
 function useDashboardState() {
@@ -92,6 +102,14 @@ function useDashboardState() {
     { id: 's0', time: '10:46', title: 'Market Volatility & Margin Trading Pause', channels: ['Twitter/X', 'In-App Banner'], audience: 'All Users', reach: 184_220 },
   ]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const [tcs, setTcs] = useState(initialTcs);
+  const [tcsThreshold, setTcsThresholdState] = useState(3000);
+  const [userAlerts, setUserAlerts] = useState<UserAlert[]>([]);
+  const tcsPriceRef = useRef(TCS_REFERENCE);
+  const tcsThresholdRef = useRef(3000);
+  const alertFlagsRef = useRef({ warning: false, critical: false });
+  const checkThresholdRef = useRef<() => void>(() => {});
 
   // One-second clock: drives the header time and the "since anomaly" timer
   useEffect(() => {
@@ -144,6 +162,12 @@ function useDashboardState() {
         const price = Math.max(55000, Math.round(last.price + (Math.random() - 0.52) * 260));
         return [...s.slice(1), { time, price, volume: Math.round(1500 + Math.random() * 1600) }];
       });
+      // Keeps sliding during the crash, with small relief bounces once it's well below the reference
+      const prev = tcsPriceRef.current;
+      const price = Math.round(prev - (prev > 2750 ? 10 + Math.random() * 40 : (Math.random() - 0.5) * 30));
+      tcsPriceRef.current = price;
+      setTcs(p => ({ price, volume: p.volume + Math.round(2000 + Math.random() * 8000), history: [...p.history, { t, price }].slice(-40) }));
+      checkThresholdRef.current();
       setFeed(f => {
         const p = pick(FEED_PAIRS);
         const qty = p.qty[0] + Math.random() * (p.qty[1] - p.qty[0]);
@@ -165,6 +189,19 @@ function useDashboardState() {
     return () => clearInterval(id);
   }, [settings.live, settings.speedMs]);
 
+  const addUserAlert = useCallback((type: UserAlert['type'], message: string, price: number, threshold: number) => {
+    setUserAlerts(a => [{ id: uid(), time: clockRef.current, asset: 'TCS', type, message, price, threshold }, ...a]);
+  }, []);
+
+  const dismissUserAlert = useCallback((id: string) => setUserAlerts(a => a.filter(x => x.id !== id)), []);
+
+  const resetTcs = useCallback(() => {
+    tcsPriceRef.current = TCS_REFERENCE;
+    alertFlagsRef.current = { warning: false, critical: false };
+    setTcs(initialTcs());
+    setUserAlerts([]);
+  }, []);
+
   const notify = useCallback((title: string, tone: Toast['tone'] = 'success') => {
     const id = uid();
     setToasts(t => [...t, { id, title, tone }]);
@@ -174,6 +211,41 @@ function useDashboardState() {
   const addLog = useCallback((text: string, category: LogCategory, author = 'You (Team Lead)', status: IncidentLogItem['status'] = 'done', notes?: string) => {
     setLogs(l => [...l, { id: uid(), time: clockRef.current, text, category, status, author, notes }]);
   }, []);
+
+  // Threshold engine: each level fires once per crossing and re-arms when the price recovers
+  const checkThreshold = useCallback(() => {
+    const price = tcsPriceRef.current;
+    const limit = tcsThresholdRef.current;
+    const flags = alertFlagsRef.current;
+    const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+    if (price < limit && !flags.critical) {
+      alertFlagsRef.current = { warning: true, critical: true };
+      addUserAlert('CRITICAL', 'TCS crossed below your configured threshold', price, limit);
+      addLog(`User alert: TCS crossed below threshold (${fmt(price)})`, 'Market', 'Threshold Engine');
+      notify('TCS crossed below your threshold', 'danger');
+    } else if (price >= limit && price <= limit + TCS_WARNING_BAND && !flags.warning) {
+      alertFlagsRef.current = { warning: true, critical: false };
+      addUserAlert('WARNING', `TCS approaching your threshold (${fmt(limit)})`, price, limit);
+      addLog(`User alert: TCS approaching threshold (${fmt(price)})`, 'Market', 'Threshold Engine');
+      notify('TCS approaching your price threshold', 'info');
+    } else if (price > limit + TCS_WARNING_BAND) {
+      alertFlagsRef.current = { warning: false, critical: false };
+    }
+  }, [addUserAlert, addLog, notify]);
+
+  useEffect(() => {
+    checkThresholdRef.current = checkThreshold;
+  }, [checkThreshold]);
+
+  const setTcsThreshold = useCallback(
+    (v: number) => {
+      tcsThresholdRef.current = v;
+      alertFlagsRef.current = { warning: false, critical: false };
+      setTcsThresholdState(v);
+      checkThreshold();
+    },
+    [checkThreshold],
+  );
 
   const toggleLog = useCallback((id: string) => {
     setLogs(l => l.map(x => (x.id === id ? { ...x, status: x.status === 'done' ? 'pending' : 'done' } : x)));
@@ -243,6 +315,7 @@ function useDashboardState() {
     templates, setTemplates, selectedTemplateId, setSelectedTemplateId,
     sent, sendMessage,
     toasts, notify,
+    tcs, tcsThreshold, setTcsThreshold, userAlerts, dismissUserAlert, resetTcs,
   };
 }
 
