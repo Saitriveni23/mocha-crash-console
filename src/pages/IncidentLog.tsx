@@ -1,9 +1,11 @@
-import { Check, Clock, Download, Plus, RotateCcw, Search, SkipForward, Trash2 } from 'lucide-react';
+import { Check, Clock, Download, Plus, RotateCcw, Search, SkipForward, Trash2, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
+import { Avatar } from '../components/ui';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { Card, CardTitle, CategoryBadge, PageHeader, StepIcon } from '../components/ui';
 import { CATEGORY_DOTS, formatElapsed } from '../lib';
 import { useDashboard } from '../store';
+import { TEAM_MEMBERS } from '../mockData';
 import type { LogCategory } from '../types';
 
 const CATEGORIES: LogCategory[] = ['Market', 'Support', 'Comms', 'Ops', 'Pending'];
@@ -80,6 +82,96 @@ function Stages() {
   );
 }
 
+function TeamTimeline() {
+  const { simulationElapsed } = useDashboard();
+  const mins = Math.floor(simulationElapsed / 60);
+  const isResolved = mins >= 60;
+
+  const PHASES = [
+    { start: 0, end: 20, label: '0-20m' },
+    { start: 20, end: 40, label: '20-40m' },
+    { start: 40, end: 60, label: '40-60m' },
+  ];
+
+  const MEMBER_TASKS = [
+    { id: 'm1', tasks: ['Coordinate Response', 'Approve Margins', 'Final Review'] }, // You
+    { id: 'm2', tasks: ['Monitor Liquidations', 'Execute Blocks', 'Oracle Health'] }, // Arjun
+    { id: 'm3', tasks: ['Issue Comms', 'Support Surge', 'All Clear Notice'] }, // Meera
+  ];
+
+  if (isResolved) {
+    return (
+      <Card className="p-8 border-[#48D597]/40 bg-[#48D597]/10 flex flex-col items-center justify-center text-center">
+        <CheckCircle2 className="w-16 h-16 text-[#48D597] mb-3 drop-shadow-[0_0_12px_rgba(72,213,151,0.5)]" />
+        <h2 className="text-3xl font-bold text-[#F6EBDD] tracking-tight">CRASH RESOLVED</h2>
+        <p className="text-[#A49A92] mt-2 max-w-md">The 60-minute flash crash simulation has successfully concluded. All systems and limits are fully restored.</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-5">
+      <h3 className="text-[15px] font-bold text-[#F6EBDD] mb-4">60-Minute Resolution Timeline</h3>
+      
+      {/* Timeline Header (Time brackets) */}
+      <div className="flex ml-[120px] mb-2 border-b border-[#2A211D] pb-2">
+        {PHASES.map((p, i) => {
+          const active = mins >= p.start && mins < p.end;
+          return (
+            <div key={i} className={`flex-1 text-center text-[10px] font-bold ${active ? 'text-[#D9A35E]' : 'text-[#A49A92]'}`}>
+              {p.label}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Team Rows */}
+      <div className="space-y-3">
+        {MEMBER_TASKS.map(mt => {
+          const member = TEAM_MEMBERS.find(m => m.id === mt.id)!;
+          return (
+            <div key={mt.id} className="flex items-center">
+              {/* Avatar Column */}
+              <div className="w-[120px] shrink-0 flex items-center gap-2 pr-4 border-r border-[#2A211D]">
+                <Avatar member={member} size={28} />
+                <div className="text-[11px] font-bold text-[#F6EBDD] truncate">{member.shortName}</div>
+              </div>
+              
+              {/* Tasks Row */}
+              <div className="flex-1 flex gap-2 pl-2">
+                {mt.tasks.map((task, i) => {
+                  const phaseStart = i * 20;
+                  const phaseEnd = phaseStart + 20;
+                  const isDone = mins >= phaseEnd;
+                  const isActive = mins >= phaseStart && mins < phaseEnd;
+                  
+                  let bg = 'bg-[#1F1916] border-[#2A211D] text-[#A49A92]';
+                  if (isDone) bg = 'bg-[#48D597]/15 border-[#48D597]/30 text-[#48D597]';
+                  else if (isActive) bg = 'bg-gradient-to-r from-[#D9A35E]/15 to-[#B66A3C]/15 border-[#D9A35E]/40 text-[#D9A35E] glow-gold';
+
+                  return (
+                    <div key={i} className={`flex-1 rounded-lg border p-2 flex flex-col justify-center items-center text-center transition-colors ${bg}`}>
+                      <span className="text-[10px] font-bold leading-tight">{task}</span>
+                      <span className="text-[9px] mt-0.5 opacity-60 uppercase tracking-wide">
+                        {isDone ? 'Completed' : isActive ? 'In Progress' : 'Pending'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Progress Bar overlay */}
+      <div className="mt-5 relative h-1.5 bg-[#1F1916] rounded-full overflow-hidden">
+        <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#D9A35E] to-[#B66A3C] transition-all" style={{ width: `${(mins / 60) * 100}%` }} />
+      </div>
+    </Card>
+  );
+}
+
 export default function IncidentLog() {
   const { logs, addLog, toggleLog, removeLog, notify } = useDashboard();
   const [query, setQuery] = useState('');
@@ -135,6 +227,7 @@ export default function IncidentLog() {
           </button>
         }
       />
+      <TeamTimeline />
       <Stages />
 
       <div className="grid grid-cols-1 *:min-w-0 xl:grid-cols-[1fr_320px] gap-4">
