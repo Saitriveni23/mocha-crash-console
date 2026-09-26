@@ -1,5 +1,5 @@
 import { Activity, Globe2, MapPin, Pause, Play, Radio, TrendingDown, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardTitle, CoinIcon, LiveDot, PageHeader } from '../components/ui';
 import WorldMap from '../components/WorldMap';
 import { MARKET_PAIRS, REGIONAL_HOTSPOTS, TOP_LIQUIDATIONS_DATA } from '../mockData';
@@ -40,7 +40,7 @@ function Ticker() {
 // ─── SVG Candlestick Chart ────────────────────────────
 interface OHLCCandle { time: string; open: number; close: number; high: number; low: number; }
 
-function SVGCandleChart({ candles, minP, maxP }: { candles: OHLCCandle[]; minP: number; maxP: number }) {
+const SVGCandleChart = React.memo(function SVGCandleChart({ candles, minP, maxP }: { candles: OHLCCandle[]; minP: number; maxP: number }) {
   const [hovered, setHovered] = useState<{ c: OHLCCandle; i: number } | null>(null);
 
   const W = 900, H = 270;
@@ -134,7 +134,7 @@ function SVGCandleChart({ candles, minP, maxP }: { candles: OHLCCandle[]; minP: 
       })()}
     </div>
   );
-}
+});
 
 // ─── Price Chart with candlesticks ───────────────────
 function PriceChart() {
