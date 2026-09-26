@@ -24,59 +24,59 @@ function NewTemplate({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-lg" onClick={e => e.stopPropagation()}>
-        <Card className="p-6 animate-fade-up" glow="purple">
+        <Card className="p-6 animate-fade-up border-[#D9A35E]/25">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-bold text-white">New Template</h3>
-            <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="Close">
+            <h3 className="text-lg font-bold text-[#F6EBDD]">New Template</h3>
+            <button onClick={onClose} className="text-[#A49A92] hover:text-[#F6EBDD]" aria-label="Close">
               <X className="w-5 h-5" />
             </button>
           </div>
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Title</label>
+          <label className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider">Title</label>
           <input
             autoFocus
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="w-full mt-1.5 mb-4 bg-[#0c0f1e] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400"
+            className="w-full mt-1.5 mb-4 bg-[#090807] border border-[#2A211D] rounded-xl px-3 py-2 text-sm text-[#F6EBDD] focus:outline-none focus:border-[#D9A35E]"
           />
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+          <label className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider">Category</label>
           <div className="flex flex-wrap gap-2 mt-1.5 mb-4">
             {CATEGORIES.map(c => (
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`text-xs font-bold px-3 py-1 rounded-full border ${category === c ? TEMPLATE_CATEGORY_STYLE[c] : 'border-white/10 text-slate-400'}`}
+                className={`text-xs font-bold px-3 py-1 rounded-full border ${category === c ? TEMPLATE_CATEGORY_STYLE[c] : 'border-[#2A211D] text-[#A49A92]'}`}
               >
                 {c}
               </button>
             ))}
           </div>
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Message</label>
+          <label className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider">Message</label>
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}
             rows={5}
-            className="w-full mt-1.5 mb-4 bg-[#0c0f1e] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400 resize-none"
+            className="w-full mt-1.5 mb-4 bg-[#090807] border border-[#2A211D] rounded-xl px-3 py-2 text-sm text-[#F6EBDD] focus:outline-none focus:border-[#D9A35E] resize-none"
           />
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Default channels</label>
+          <label className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider">Default channels</label>
           <div className="flex flex-wrap gap-2 mt-1.5">
             {CHANNELS.map(c => (
               <button
                 key={c}
                 onClick={() => setChannels(cs => (cs.includes(c) ? cs.filter(x => x !== c) : [...cs, c]))}
-                className={`text-xs font-semibold px-3 py-1 rounded-full border ${channels.includes(c) ? 'bg-pink-500/20 border-pink-400/60 text-white' : 'border-white/10 text-slate-400'}`}
+                className={`text-xs font-semibold px-3 py-1 rounded-full border ${channels.includes(c) ? 'bg-[#B66A3C]/10 border-[#B66A3C]/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92]'}`}
               >
                 {c}
               </button>
             ))}
           </div>
           <div className="flex justify-end gap-2 mt-6">
-            <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 border border-white/15 hover:bg-white/5">
+            <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold text-[#A49A92] border border-[#2A211D] hover:bg-[#1F1916]">
               Cancel
             </button>
             <button
               disabled={!title.trim() || !content.trim()}
               onClick={save}
-              className="px-5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 text-white text-sm font-bold glow-purple disabled:opacity-40 disabled:shadow-none"
+              className="px-5 py-2 rounded-xl bg-linear-to-r from-[#B66A3C] to-[#D9A35E] text-[#F6EBDD] text-sm font-bold glow-gold disabled:opacity-40 disabled:shadow-none"
             >
               Save template
             </button>
@@ -105,7 +105,7 @@ export default function Templates() {
         right={
           <button
             onClick={() => setCreating(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 text-white text-sm font-bold glow-purple hover:brightness-110"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-linear-to-r from-[#B66A3C] to-[#D9A35E] text-[#F6EBDD] text-sm font-bold glow-gold hover:brightness-110"
           >
             <Plus className="w-4 h-4" /> New template
           </button>
@@ -114,12 +114,12 @@ export default function Templates() {
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[220px] max-w-md">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#A49A92]/70 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search templates…"
-            className="w-full cyber-card rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-400"
+            className="w-full mt-card rounded-xl pl-9 pr-3 py-2 text-sm text-[#F6EBDD] placeholder:text-[#A49A92]/70 focus:outline-none focus:border-[#D9A35E]"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -128,7 +128,7 @@ export default function Templates() {
               key={c}
               onClick={() => setCategory(c)}
               className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-colors ${
-                category === c ? 'bg-purple-500/25 border-purple-400/60 text-white' : 'border-white/10 text-slate-400 hover:text-white'
+                category === c ? 'bg-[#D9A35E]/10 border-[#D9A35E]/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92] hover:text-[#F6EBDD]'
               }`}
             >
               {c}
@@ -139,29 +139,29 @@ export default function Templates() {
 
       <div className="grid grid-cols-1 *:min-w-0 md:grid-cols-2 2xl:grid-cols-3 gap-4">
         {visible.map(t => (
-          <Card key={t.id} className="p-5 flex flex-col hover:border-purple-400/50 transition-colors">
+          <Card key={t.id} className="p-5 flex flex-col hover:border-[#D9A35E]/30 transition-colors">
             <div className="flex items-start justify-between gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5 text-purple-300" />
+              <div className="w-10 h-10 rounded-xl bg-[#D9A35E]/10 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-[#D9A35E]" />
               </div>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${TEMPLATE_CATEGORY_STYLE[t.category]}`}>{t.category}</span>
             </div>
-            <h3 className="text-[15px] font-bold text-white mt-3 leading-snug">{t.title}</h3>
-            <p className="text-[13px] text-slate-400 mt-2 leading-relaxed line-clamp-4 flex-1">{t.content}</p>
+            <h3 className="text-[15px] font-bold text-[#F6EBDD] mt-3 leading-snug">{t.title}</h3>
+            <p className="text-[13px] text-[#A49A92] mt-2 leading-relaxed line-clamp-4 flex-1">{t.content}</p>
             <div className="flex flex-wrap gap-1.5 mt-4">
               {t.channels.map(c => (
-                <Pill key={c} className="border-white/10 text-slate-300">
+                <Pill key={c} className="border-[#2A211D] text-[#A49A92]">
                   {c}
                 </Pill>
               ))}
             </div>
-            <div className="flex gap-2 mt-4 pt-4 border-t border-white/5">
+            <div className="flex gap-2 mt-4 pt-4 border-t border-[#2A211D]">
               <button
                 onClick={() => {
                   setSelectedTemplateId(t.id);
                   setTab('Communications');
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-linear-to-r from-pink-500 to-fuchsia-600 text-white text-xs font-bold hover:brightness-110"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-linear-to-r from-[#B66A3C] to-fuchsia-600 text-[#F6EBDD] text-xs font-bold hover:brightness-110"
               >
                 <Send className="w-3.5 h-3.5" /> Use template
               </button>
@@ -172,7 +172,7 @@ export default function Templates() {
                     () => notify('Clipboard unavailable', 'danger'),
                   );
                 }}
-                className="px-3 rounded-lg border border-white/15 text-slate-300 hover:bg-white/5"
+                className="px-3 rounded-lg border border-[#2A211D] text-[#A49A92] hover:bg-[#1F1916]"
                 aria-label="Copy template text"
               >
                 <Copy className="w-4 h-4" />
@@ -183,7 +183,7 @@ export default function Templates() {
                   notify('Template deleted', 'danger');
                 }}
                 disabled={templates.length <= 1}
-                className="px-3 rounded-lg border border-white/15 text-slate-300 hover:text-rose-400 hover:bg-white/5 disabled:opacity-30"
+                className="px-3 rounded-lg border border-[#2A211D] text-[#A49A92] hover:text-rose-400 hover:bg-[#1F1916] disabled:opacity-30"
                 aria-label="Delete template"
               >
                 <Trash2 className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function Templates() {
         ))}
         <button
           onClick={() => setCreating(true)}
-          className="rounded-2xl border-2 border-dashed border-white/10 hover:border-purple-400/50 min-h-[260px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-white transition-colors"
+          className="rounded-2xl border-2 border-dashed border-[#2A211D] hover:border-[#D9A35E]/30 min-h-[260px] flex flex-col items-center justify-center gap-2 text-[#A49A92] hover:text-[#F6EBDD] transition-colors"
         >
           <Plus className="w-8 h-8" />
           <span className="text-sm font-semibold">Create a new template</span>

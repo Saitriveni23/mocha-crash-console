@@ -24,8 +24,8 @@ function Stages() {
     <Card className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
-          <h3 className="text-[15px] font-bold text-white">Response Stages</h3>
-          <p className="text-xs text-slate-400">
+          <h3 className="text-[15px] font-bold text-[#F6EBDD]">Response Stages</h3>
+          <p className="text-xs text-[#A49A92]">
             {done} of {steps.length} complete · incident open for{' '}
             <span className="font-mono-numbers text-rose-300 font-bold">
               {h}:{m}:{s}
@@ -33,7 +33,7 @@ function Stages() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={resetSteps} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 border border-white/15 hover:bg-white/5">
+          <button onClick={resetSteps} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#A49A92] border border-[#2A211D] hover:bg-[#1F1916]">
             <RotateCcw className="w-3.5 h-3.5" /> Reset
           </button>
           <button
@@ -44,7 +44,7 @@ function Stages() {
               addLog(`Completed stage: ${current.title}`, 'Ops');
               notify(`${current.title} marked complete`);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-linear-to-r from-purple-600 to-pink-600 glow-purple hover:brightness-110"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#F6EBDD] bg-linear-to-r from-[#B66A3C] to-[#D9A35E] glow-gold hover:brightness-110"
           >
             <SkipForward className="w-3.5 h-3.5" /> Complete current stage
           </button>
@@ -56,20 +56,20 @@ function Stages() {
             key={st.step}
             className={`p-3.5 rounded-xl border ${
               st.status === 'Completed'
-                ? 'border-emerald-500/40 bg-emerald-500/10'
+                ? 'border-[#48D597]/30 bg-[#48D597]/10'
                 : st.status === 'In progress'
-                  ? 'border-blue-500/50 bg-blue-500/10 glow-cyan'
-                  : 'border-white/10 bg-white/[0.02]'
+                  ? 'border-[#A49A92]/30 bg-[#A49A92]/10 glow-gold'
+                  : 'border-[#2A211D] bg-white/[0.02]'
             }`}
           >
             <div className="flex items-center gap-2">
               <StepIcon step={st} />
-              <span className="text-[11px] font-bold text-slate-400">STAGE {st.step}</span>
+              <span className="text-[11px] font-bold text-[#A49A92]">STAGE {st.step}</span>
             </div>
-            <div className="text-sm font-bold text-white mt-2">{st.title}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5 leading-snug">{st.desc}</div>
+            <div className="text-sm font-bold text-[#F6EBDD] mt-2">{st.title}</div>
+            <div className="text-[11px] text-[#A49A92] mt-0.5 leading-snug">{st.desc}</div>
             <div
-              className={`text-[11px] font-bold mt-2 ${st.status === 'Completed' ? 'text-emerald-300' : st.status === 'In progress' ? 'text-blue-300' : 'text-slate-500'}`}
+              className={`text-[11px] font-bold mt-2 ${st.status === 'Completed' ? 'text-[#48D597]' : st.status === 'In progress' ? 'text-[#A49A92]' : 'text-[#A49A92]/70'}`}
             >
               {st.status}
             </div>
@@ -130,7 +130,7 @@ export default function IncidentLog() {
         title="Incident Log"
         subtitle="Every decision and observation, timestamped for the post-incident review"
         right={
-          <button onClick={exportLog} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white hover:bg-white/10">
+          <button onClick={exportLog} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#2A211D] bg-[#1F1916] text-sm font-semibold text-[#F6EBDD] hover:bg-[#2A211D]">
             <Download className="w-4 h-4" /> Export
           </button>
         }
@@ -141,20 +141,20 @@ export default function IncidentLog() {
         <Card className="p-5">
           <div className="flex flex-wrap gap-3 mb-4">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#A49A92]/70 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search entries, authors, notes…"
-                className="w-full bg-[#0c0f1e]/80 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-400"
+                className="w-full bg-[#090807]/80 border border-[#2A211D] rounded-xl pl-9 pr-3 py-2 text-sm text-[#F6EBDD] placeholder:text-[#A49A92]/70 focus:outline-none focus:border-[#D9A35E]"
               />
             </div>
-            <div className="flex gap-1 p-1 rounded-xl bg-[#0c0f1e]/80 border border-white/10">
+            <div className="flex gap-1 p-1 rounded-xl bg-[#090807]/80 border border-[#2A211D]">
               {(['all', 'done', 'pending'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold capitalize ${statusFilter === s ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold capitalize ${statusFilter === s ? 'bg-purple-600 text-[#F6EBDD]' : 'text-[#A49A92] hover:text-[#F6EBDD]'}`}
                 >
                   {s}
                 </button>
@@ -167,7 +167,7 @@ export default function IncidentLog() {
                 key={c}
                 onClick={() => setCats(cs => (cs.includes(c) ? cs.filter(x => x !== c) : [...cs, c]))}
                 className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${
-                  cats.includes(c) ? 'bg-white/10 border-white/30 text-white' : 'border-white/10 text-slate-400 hover:text-white'
+                  cats.includes(c) ? 'bg-[#2A211D] border-white/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92] hover:text-[#F6EBDD]'
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${CATEGORY_DOTS[c]}`} /> {c}
@@ -176,60 +176,60 @@ export default function IncidentLog() {
           </div>
 
           <div className="relative">
-            <div className="absolute left-[7px] top-3 bottom-3 w-px bg-white/10" />
+            <div className="absolute left-[7px] top-3 bottom-3 w-px bg-[#2A211D]" />
             {visible.map(l => (
               <div key={l.id} className="relative flex gap-4 pb-4 group">
                 <span className={`w-[15px] h-[15px] mt-1 rounded-full shrink-0 z-10 border-2 border-[#11162d] ${CATEGORY_DOTS[l.category]}`} />
-                <div className="flex-1 min-w-0 rounded-xl bg-white/[0.03] border border-white/5 p-3 hover:border-white/15 transition-colors">
+                <div className="flex-1 min-w-0 rounded-xl bg-[#090807] border border-[#2A211D] p-3 hover:border-[#2A211D] transition-colors">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-slate-400 font-mono-numbers">{l.time}</span>
-                    <span className="text-sm font-semibold text-white flex-1 min-w-[160px]">{l.text}</span>
+                    <span className="text-xs text-[#A49A92] font-mono-numbers">{l.time}</span>
+                    <span className="text-sm font-semibold text-[#F6EBDD] flex-1 min-w-[160px]">{l.text}</span>
                     <CategoryBadge category={l.category} />
                     <button
                       onClick={() => toggleLog(l.id)}
                       className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                        l.status === 'done' ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' : 'text-slate-300 border-white/15'
+                        l.status === 'done' ? 'text-[#48D597] border-[#48D597]/30 bg-[#48D597]/10' : 'text-[#A49A92] border-[#2A211D]'
                       }`}
                       title="Toggle status"
                     >
                       {l.status === 'done' ? <Check className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                       {l.status === 'done' ? 'Done' : 'Pending'}
                     </button>
-                    <button onClick={() => removeLog(l.id)} className="text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete entry">
+                    <button onClick={() => removeLog(l.id)} className="text-[#A49A92]/70 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Delete entry">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  {l.author && <div className="text-[11px] text-slate-400 mt-1">by {l.author}</div>}
-                  {l.notes && <div className="text-xs text-slate-300 mt-2 pl-3 border-l-2 border-purple-500/50">{l.notes}</div>}
+                  {l.author && <div className="text-[11px] text-[#A49A92] mt-1">by {l.author}</div>}
+                  {l.notes && <div className="text-xs text-[#A49A92] mt-2 pl-3 border-l-2 border-[#D9A35E]/30">{l.notes}</div>}
                 </div>
               </div>
             ))}
-            {!visible.length && <div className="text-sm text-slate-400 text-center py-8">No entries match these filters.</div>}
+            {!visible.length && <div className="text-sm text-[#A49A92] text-center py-8">No entries match these filters.</div>}
           </div>
         </Card>
 
         <div className="space-y-4">
           <Card className="p-5">
-            <CardTitle icon={<Plus className="w-4 h-4" />} iconClass="bg-purple-500/20 text-purple-300" title="Add Entry" />
+            <CardTitle icon={<Plus className="w-4 h-4" />} iconClass="bg-[#D9A35E]/10 text-[#D9A35E]" title="Add Entry" />
             <input
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="What happened?"
-              className="w-full bg-[#0c0f1e]/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-400"
+              className="w-full bg-[#090807]/80 border border-[#2A211D] rounded-xl px-3 py-2 text-sm text-[#F6EBDD] placeholder:text-[#A49A92]/70 focus:outline-none focus:border-[#D9A35E]"
             />
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Notes (optional)"
               rows={3}
-              className="w-full mt-2 bg-[#0c0f1e]/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-400 resize-none"
+              className="w-full mt-2 bg-[#090807]/80 border border-[#2A211D] rounded-xl px-3 py-2 text-sm text-[#F6EBDD] placeholder:text-[#A49A92]/70 focus:outline-none focus:border-[#D9A35E] resize-none"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {CATEGORIES.map(c => (
                 <button
                   key={c}
                   onClick={() => setCategory(c)}
-                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${category === c ? 'bg-white/10 border-white/30 text-white' : 'border-white/10 text-slate-400'}`}
+                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${category === c ? 'bg-[#2A211D] border-white/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92]'}`}
                 >
                   {c}
                 </button>
@@ -238,14 +238,14 @@ export default function IncidentLog() {
             <button
               onClick={submit}
               disabled={!text.trim()}
-              className="w-full mt-4 py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 text-white text-sm font-bold glow-purple disabled:opacity-40 disabled:shadow-none"
+              className="w-full mt-4 py-2.5 rounded-xl bg-linear-to-r from-[#B66A3C] to-[#D9A35E] text-[#F6EBDD] text-sm font-bold glow-gold disabled:opacity-40 disabled:shadow-none"
             >
               Add to log
             </button>
           </Card>
 
           <Card className="p-5">
-            <h3 className="text-[15px] font-bold text-white mb-2">Entries by Category</h3>
+            <h3 className="text-[15px] font-bold text-[#F6EBDD] mb-2">Entries by Category</h3>
             <div className="h-[160px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -257,22 +257,22 @@ export default function IncidentLog() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-extrabold text-white">{logs.length}</span>
-                <span className="text-[11px] text-slate-400">entries</span>
+                <span className="text-2xl font-extrabold text-[#F6EBDD]">{logs.length}</span>
+                <span className="text-[11px] text-[#A49A92]">entries</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {byCategory.map(d => (
-                <div key={d.name} className="flex items-center gap-2 text-xs text-slate-300">
+                <div key={d.name} className="flex items-center gap-2 text-xs text-[#A49A92]">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: CATEGORY_COLORS[d.name] }} />
-                  {d.name} <span className="ml-auto font-bold text-white">{d.value}</span>
+                  {d.name} <span className="ml-auto font-bold text-[#F6EBDD]">{d.value}</span>
                 </div>
               ))}
             </div>
           </Card>
 
           <Card className="p-5 space-y-2.5 text-sm">
-            <h3 className="text-[15px] font-bold text-white mb-1">Incident Details</h3>
+            <h3 className="text-[15px] font-bold text-[#F6EBDD] mb-1">Incident Details</h3>
             {[
               ['Incident', 'INC-2025-0425-01'],
               ['Severity', 'SEV-1'],
@@ -281,8 +281,8 @@ export default function IncidentLog() {
               ['Trigger', 'Liquidation velocity > 5,000/min'],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3">
-                <span className="text-slate-400">{k}</span>
-                <span className={`font-semibold text-right ${v === 'SEV-1' ? 'text-rose-300' : 'text-white'}`}>{v}</span>
+                <span className="text-[#A49A92]">{k}</span>
+                <span className={`font-semibold text-right ${v === 'SEV-1' ? 'text-rose-300' : 'text-[#F6EBDD]'}`}>{v}</span>
               </div>
             ))}
           </Card>

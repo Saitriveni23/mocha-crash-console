@@ -48,7 +48,7 @@ const AMBIENT: [number, number, number][] = [
 ];
 
 const TYPE_STYLE = {
-  liquidation: { color: '#ff2a5f', core: 'bg-rose-500', Icon: AlertTriangle },
+  liquidation: { color: '#D9A35E', core: 'bg-[#F87171]', Icon: AlertTriangle },
   sentiment: { color: '#f43f5e', core: 'bg-pink-600', Icon: Frown },
   tickets: { color: '#fbbf24', core: 'bg-emerald-500', Icon: Headphones },
 };
@@ -129,7 +129,7 @@ export default function WorldMap({
                 <div
                   className={`absolute whitespace-nowrap ${
                     x / W < 0.35 ? '-left-4 top-5' : x / W > 0.7 ? '-right-4 bottom-5' : 'left-1/2 -translate-x-1/2 bottom-5'
-                  } px-2.5 py-1.5 rounded-lg bg-[#0c0f1e]/90 border border-white/15 text-[11px] leading-tight text-white shadow-xl backdrop-blur pointer-events-none z-10`}
+                  } px-2.5 py-1.5 rounded-lg bg-[#090807]/90 border border-white/15 text-[11px] leading-tight text-white shadow-xl backdrop-blur pointer-events-none z-10`}
                 >
                   <span className="font-bold">{h.city}:</span> {h.label}
                 </div>
@@ -140,18 +140,18 @@ export default function WorldMap({
       </div>
 
       <div className="absolute right-2 bottom-2 flex flex-col rounded-lg overflow-hidden border border-white/10 bg-[#11162d]/90">
-        <button onClick={() => setZoom(z => Math.min(2, z + 0.25))} className="p-1.5 text-slate-300 hover:bg-white/10" aria-label="Zoom in">
+        <button onClick={() => setZoom(z => Math.min(2, z + 0.25))} className="p-1.5 text-[#A49A92] hover:bg-white/10" aria-label="Zoom in">
           <Plus className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => setZoom(z => Math.max(1, z - 0.25))} className="p-1.5 text-slate-300 hover:bg-white/10 border-t border-white/10" aria-label="Zoom out">
+        <button onClick={() => setZoom(z => Math.max(1, z - 0.25))} className="p-1.5 text-[#A49A92] hover:bg-white/10 border-t border-white/10" aria-label="Zoom out">
           <Minus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {showLegend && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-2 px-3 py-1.5 rounded-lg bg-[#0c0f1e]/85 border border-white/10">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2 px-3 py-1.5 rounded-lg bg-[#090807]/85 border border-white/10">
           <div className="w-40 h-1.5 rounded-full bg-linear-to-r from-rose-500 via-amber-400 to-emerald-400" />
-          <div className="flex justify-between text-[9px] text-slate-400 mt-1 font-semibold">
+          <div className="flex justify-between text-[9px] text-[#A49A92] mt-1 font-semibold">
             <span>High Density</span>
             <span>Low Density</span>
           </div>

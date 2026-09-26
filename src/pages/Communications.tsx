@@ -45,24 +45,24 @@ function Composer({ template }: { template: CommunicationTemplate }) {
           value={content}
           onChange={e => setContent(e.target.value)}
           rows={7}
-          className="w-full bg-[#0c0f1e]/80 border border-white/10 rounded-xl p-3.5 text-sm text-slate-100 leading-relaxed focus:outline-none focus:border-purple-400 resize-none custom-scrollbar"
+          className="w-full bg-[#090807]/80 border border-[#2A211D] rounded-xl p-3.5 text-sm text-[#F6EBDD] leading-relaxed focus:outline-none focus:border-[#D9A35E] resize-none custom-scrollbar"
         />
         <div className="flex justify-between text-[11px] mt-1.5">
-          <span className={tooLongForX ? 'text-amber-300 font-semibold' : 'text-slate-500'}>
+          <span className={tooLongForX ? 'text-amber-300 font-semibold' : 'text-[#A49A92]/70'}>
             {tooLongForX ? 'Longer than 280 characters — X will post it as a thread' : 'Pre-approved wording. Edits are logged.'}
           </span>
-          <span className="text-slate-500 font-mono-numbers">{content.length} chars</span>
+          <span className="text-[#A49A92]/70 font-mono-numbers">{content.length} chars</span>
         </div>
 
         <div className="mt-5">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Audience</div>
+          <div className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider mb-2">Audience</div>
           <div className="flex flex-wrap gap-2">
             {AUDIENCES.map(a => (
               <button
                 key={a}
                 onClick={() => setAudience(a)}
                 className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                  audience === a ? 'bg-purple-500/25 border-purple-400/60 text-white' : 'border-white/10 text-slate-400 hover:text-white'
+                  audience === a ? 'bg-[#D9A35E]/10 border-[#D9A35E]/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92] hover:text-[#F6EBDD]'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" /> {a}
@@ -72,14 +72,14 @@ function Composer({ template }: { template: CommunicationTemplate }) {
         </div>
 
         <div className="mt-4">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Channels</div>
+          <div className="text-[11px] font-bold text-[#A49A92] uppercase tracking-wider mb-2">Channels</div>
           <div className="flex flex-wrap gap-2">
             {available.map(c => (
               <button
                 key={c}
                 onClick={() => toggle(c)}
                 className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                  channels.includes(c) ? 'bg-pink-500/20 border-pink-400/60 text-white' : 'border-white/10 text-slate-400 hover:text-white'
+                  channels.includes(c) ? 'bg-[#B66A3C]/10 border-[#B66A3C]/30 text-[#F6EBDD]' : 'border-[#2A211D] text-[#A49A92] hover:text-[#F6EBDD]'
                 }`}
               >
                 {CHANNEL_ICONS[c]} {c}
@@ -88,13 +88,13 @@ function Composer({ template }: { template: CommunicationTemplate }) {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-white/5 flex flex-wrap items-center gap-3">
+        <div className="mt-6 pt-4 border-t border-[#2A211D] flex flex-wrap items-center gap-3">
           {confirming ? (
             <>
-              <span className="text-sm text-slate-200 flex-1">
+              <span className="text-sm text-[#F6EBDD] flex-1">
                 Send to <b>{audience}</b> via <b>{channels.length}</b> channel{channels.length === 1 ? '' : 's'}?
               </span>
-              <button onClick={() => setConfirming(false)} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 border border-white/15 hover:bg-white/5">
+              <button onClick={() => setConfirming(false)} className="px-4 py-2 rounded-xl text-sm font-semibold text-[#A49A92] border border-[#2A211D] hover:bg-[#1F1916]">
                 Cancel
               </button>
               <button
@@ -102,7 +102,7 @@ function Composer({ template }: { template: CommunicationTemplate }) {
                   sendMessage(template.title, channels, audience);
                   setConfirming(false);
                 }}
-                className="px-5 py-2 rounded-xl bg-linear-to-r from-rose-600 to-pink-500 text-white text-sm font-bold glow-pink hover:brightness-110"
+                className="px-5 py-2 rounded-xl bg-linear-to-r from-rose-600 to-[#D9A35E] text-[#F6EBDD] text-sm font-bold glow-gold hover:brightness-110"
               >
                 Confirm & send
               </button>
@@ -111,7 +111,7 @@ function Composer({ template }: { template: CommunicationTemplate }) {
             <button
               disabled={!channels.length || !content.trim()}
               onClick={() => setConfirming(true)}
-              className="ml-auto px-5 py-2.5 rounded-xl bg-linear-to-r from-pink-500 to-fuchsia-600 text-white text-sm font-bold glow-pink hover:brightness-110 disabled:opacity-40 disabled:shadow-none flex items-center gap-2"
+              className="ml-auto px-5 py-2.5 rounded-xl bg-linear-to-r from-[#B66A3C] to-fuchsia-600 text-[#F6EBDD] text-sm font-bold glow-gold hover:brightness-110 disabled:opacity-40 disabled:shadow-none flex items-center gap-2"
             >
               <Send className="w-4 h-4" /> Send broadcast
             </button>
@@ -121,13 +121,13 @@ function Composer({ template }: { template: CommunicationTemplate }) {
 
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[15px] font-bold text-white">Preview</h3>
-          <div className="flex gap-1 p-1 rounded-lg bg-[#0c0f1e]/80 border border-white/10">
+          <h3 className="text-[15px] font-bold text-[#F6EBDD]">Preview</h3>
+          <div className="flex gap-1 p-1 rounded-lg bg-[#090807]/80 border border-[#2A211D]">
             {(['Twitter/X', 'In-App', 'Email'] as const).map(p => (
               <button
                 key={p}
                 onClick={() => setPreview(p)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${preview === p ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${preview === p ? 'bg-purple-600 text-[#F6EBDD]' : 'text-[#A49A92] hover:text-[#F6EBDD]'}`}
               >
                 {p}
               </button>
@@ -136,15 +136,15 @@ function Composer({ template }: { template: CommunicationTemplate }) {
         </div>
 
         {preview === 'Twitter/X' && (
-          <div className="rounded-xl bg-black border border-white/10 p-4">
+          <div className="rounded-xl bg-black border border-[#2A211D] p-4">
             <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-extrabold shrink-0">M</div>
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#B66A3C] to-[#D9A35E] flex items-center justify-center text-[#F6EBDD] font-extrabold shrink-0">M</div>
               <div className="min-w-0">
                 <div className="text-sm">
-                  <span className="font-bold text-white">MochaTrade</span> <span className="text-slate-500">@mochatrade_status · now</span>
+                  <span className="font-bold text-[#F6EBDD]">MochaTrade</span> <span className="text-[#A49A92]/70">@mochatrade_status · now</span>
                 </div>
-                <p className="text-sm text-slate-100 mt-1 whitespace-pre-wrap break-words">{content.slice(0, 280)}{content.length > 280 && '… 🧵'}</p>
-                <div className="flex gap-10 mt-3 text-slate-500">
+                <p className="text-sm text-[#F6EBDD] mt-1 whitespace-pre-wrap break-words">{content.slice(0, 280)}{content.length > 280 && '… 🧵'}</p>
+                <div className="flex gap-10 mt-3 text-[#A49A92]/70">
                   <MessageCircle className="w-4 h-4" />
                   <Repeat2 className="w-4 h-4" />
                   <Heart className="w-4 h-4" />
@@ -154,28 +154,28 @@ function Composer({ template }: { template: CommunicationTemplate }) {
           </div>
         )}
         {preview === 'In-App' && (
-          <div className="mx-auto max-w-[280px] rounded-[28px] border-4 border-[#1e2748] bg-[#0c0f1e] p-3 pt-6">
-            <div className="rounded-xl bg-linear-to-r from-rose-600/90 to-pink-600/90 p-3 text-white">
+          <div className="mx-auto max-w-[280px] rounded-[28px] border-4 border-[#1e2748] bg-[#090807] p-3 pt-6">
+            <div className="rounded-xl bg-linear-to-r from-rose-600/90 to-[#D9A35E]/90 p-3 text-[#F6EBDD]">
               <div className="flex items-center gap-2 text-xs font-bold">
                 <Bell className="w-3.5 h-3.5" /> {template.title}
               </div>
               <p className="text-[11px] mt-1.5 leading-relaxed opacity-95 line-clamp-6">{content}</p>
             </div>
             <div className="mt-3 space-y-2">
-              <div className="h-16 rounded-lg bg-white/5" />
-              <div className="h-8 rounded-lg bg-white/5" />
-              <div className="h-8 rounded-lg bg-white/5" />
+              <div className="h-16 rounded-lg bg-[#1F1916]" />
+              <div className="h-8 rounded-lg bg-[#1F1916]" />
+              <div className="h-8 rounded-lg bg-[#1F1916]" />
             </div>
           </div>
         )}
         {preview === 'Email' && (
           <div className="rounded-xl bg-white text-slate-800 overflow-hidden">
-            <div className="bg-linear-to-r from-purple-600 to-pink-500 px-4 py-3 text-white font-extrabold">MochaTrade</div>
+            <div className="bg-linear-to-r from-[#B66A3C] to-[#D9A35E] px-4 py-3 text-[#F6EBDD] font-extrabold">MochaTrade</div>
             <div className="p-4">
-              <div className="text-[11px] text-slate-500">To: {audience}</div>
+              <div className="text-[11px] text-[#A49A92]/70">To: {audience}</div>
               <div className="font-bold mt-1">{template.title}</div>
               <p className="text-sm mt-2 leading-relaxed text-slate-600">{content}</p>
-              <div className="text-xs text-slate-400 mt-4">— MochaTrade Operations</div>
+              <div className="text-xs text-[#A49A92] mt-4">— MochaTrade Operations</div>
             </div>
           </div>
         )}
@@ -194,26 +194,26 @@ export default function Communications() {
         title="Communications"
         subtitle="Pick a pre-approved template, adjust it, and broadcast to customers"
         right={
-          <button onClick={() => setTab('Templates')} className="px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-sm font-semibold text-white hover:bg-white/10">
+          <button onClick={() => setTab('Templates')} className="px-4 py-2 rounded-xl border border-[#2A211D] bg-[#1F1916] text-sm font-semibold text-[#F6EBDD] hover:bg-[#2A211D]">
             Manage templates
           </button>
         }
       />
       <div className="grid grid-cols-1 *:min-w-0 xl:grid-cols-[300px_1fr] gap-4">
         <Card className="p-4 h-fit">
-          <h3 className="text-[15px] font-bold text-white mb-3">Templates</h3>
+          <h3 className="text-[15px] font-bold text-[#F6EBDD] mb-3">Templates</h3>
           <div className="space-y-2">
             {templates.map(t => (
               <button
                 key={t.id}
                 onClick={() => setSelectedTemplateId(t.id)}
                 className={`w-full text-left p-3 rounded-xl border transition-all ${
-                  t.id === template.id ? 'cyber-card-active' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'
+                  t.id === template.id ? 'mt-card-active' : 'border-[#2A211D] bg-white/[0.02] hover:bg-[#1F1916]'
                 }`}
               >
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${TEMPLATE_CATEGORY_STYLE[t.category]}`}>{t.category}</span>
-                <div className="text-[13px] font-bold text-white mt-2 leading-snug">{t.title}</div>
-                <div className="text-[11px] text-slate-400 mt-1">{t.channels.length} channels</div>
+                <div className="text-[13px] font-bold text-[#F6EBDD] mt-2 leading-snug">{t.title}</div>
+                <div className="text-[11px] text-[#A49A92] mt-1">{t.channels.length} channels</div>
               </button>
             ))}
           </div>
@@ -222,22 +222,22 @@ export default function Communications() {
       </div>
 
       <Card className="p-5">
-        <CardTitle icon={<History className="w-4 h-4" />} iconClass="bg-emerald-500/20 text-emerald-300" title="Sent Broadcasts" subtitle="Everything sent during this incident" />
+        <CardTitle icon={<History className="w-4 h-4" />} iconClass="bg-[#48D597]/10 text-[#48D597]" title="Sent Broadcasts" subtitle="Everything sent during this incident" />
         <div className="space-y-2">
           {sent.map(s => (
-            <div key={s.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span className="text-xs text-slate-400 font-mono-numbers w-10">{s.time}</span>
-              <span className="text-[13px] font-semibold text-white flex-1 min-w-[180px]">{s.title}</span>
+            <div key={s.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-[#090807] border border-[#2A211D]">
+              <CheckCircle2 className="w-5 h-5 text-[#48D597] shrink-0" />
+              <span className="text-xs text-[#A49A92] font-mono-numbers w-10">{s.time}</span>
+              <span className="text-[13px] font-semibold text-[#F6EBDD] flex-1 min-w-[180px]">{s.title}</span>
               <div className="flex flex-wrap gap-1.5">
                 {s.channels.map(c => (
-                  <Pill key={c} className="border-white/10 text-slate-300">
+                  <Pill key={c} className="border-[#2A211D] text-[#A49A92]">
                     {CHANNEL_ICONS[c]} {c}
                   </Pill>
                 ))}
               </div>
-              <span className="text-xs text-slate-400">{s.audience}</span>
-              <span className="text-xs font-bold text-emerald-300 font-mono-numbers">{s.reach.toLocaleString('en-US')} reached</span>
+              <span className="text-xs text-[#A49A92]">{s.audience}</span>
+              <span className="text-xs font-bold text-[#48D597] font-mono-numbers">{s.reach.toLocaleString('en-US')} reached</span>
             </div>
           ))}
         </div>
