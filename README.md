@@ -10,20 +10,21 @@ The newest addition to the dashboard connects individual user protection with pl
 - **Platform Incident Context (Layer 2)**: The system clearly contrasts individual user alerts with the broader systemic impact, monitoring massive liquidation spikes and support queue timeouts concurrently.
 - **No Autonomous Execution**: Emphasizing intelligent monitoring over robotic trading, the system alerts the user and provides actionable paths (`[View Market Data]`, `[Dismiss]`) rather than executing forced buy/sell orders.
 
-## ✨ Flash-Crash Ops Console
+## ✨ MochaTrade Executive AI Workspace
 
-A dark neon incident-response dashboard. Every page shares one live-simulated incident, so actions on one page show up on the others.
+The dashboard features a completely custom, premium luxury UI inspired by an AI hedge fund operations desk.
 
-- **Overview**: Flash-crash banner with a live "since anomaly" timer, response status, liquidation / support-ticket / sentiment sparklines, BTC price chart with a regional hotspot map, key alerts, top liquidations, incident log, quick actions and team view.
-- **Market Monitor**: The TCS personal threshold alerts described above.
-- **Live Feeds**: Price ticker, per-pair price and volume chart, streaming trade feed (filter / pause), clickable regional hotspots and liquidation volume by pair.
-- **Alerts**: Threshold rules that fire from live metrics; acknowledge, escalate or pause them; alert volume chart and escalation chain.
+- **Design Language**: Warm matte black (`#090807`), copper (`#B66A3C`), and champagne gold (`#D9A35E`) with cream text — avoiding generic hacker/neon tropes for a sophisticated Apple/Notion/Bloomberg Terminal hybrid feel.
+- **Overview**: Executive dashboard with a live "since anomaly" timer, automated action plans, response status, liquidation / support-ticket / sentiment sparklines, BTC price chart with a regional hotspot map, key alerts, top liquidations, and team view.
+- **Market Monitor**: The TCS personal threshold alerts described above, layered seamlessly into the platform's overarching UI.
+- **Live Feeds**: Features a bespoke, fully responsive pure-SVG OHLC Candlestick Chart (with wicks, green/red candles, and crosshair hover tooltips), a streaming trade feed, clickable regional hotspots, and liquidation volume bars.
+- **Incident Command Center (Alerts)**: Threshold rules that fire from live metrics; acknowledge, escalate, or resolve them; complete with an AI Oracle indicator and escalation chain.
 - **Communications**: Pick a pre-approved template, edit it, choose audience and channels, preview it as an X post, in-app banner or email, then confirm and send.
 - **Incident Log**: Response stages, a searchable and filterable timeline, add / delete / resolve entries, category breakdown and Markdown export.
 - **Templates**: Search, filter, create, copy, delete, or send a template straight to Communications.
-- **Settings**: Live-stream on/off and speed, alert thresholds, which channels Communications may use, compact tables.
+- **Settings**: Live-stream on/off and speed, alert thresholds, which channels Communications may use, AI model statuses (GPT-4o, Claude 3.5), and team visibility.
 
-Pages are deep-linkable (e.g. `/#market-monitor`) and the layout works down to phone width.
+Pages are deep-linkable (e.g. `/#market-monitor`) and the layout gracefully scales down to phone width.
 
 ## 🚀 Getting Started
 
